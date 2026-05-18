@@ -24,6 +24,7 @@ import { MealLogsModule } from '@modules/meal-logs/meal-logs.module';
 import { StreaksModule } from '@modules/streaks/streaks.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { SettingsModule } from '@modules/settings/settings.module';
+import { PlatformSettingsModule } from '@modules/platform-settings/platform-settings.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { SettingsModule } from '@modules/settings/settings.module';
     StreaksModule,
     NotificationsModule,
     SettingsModule,
+    PlatformSettingsModule,
   ],
   controllers: [],
   providers: [],
