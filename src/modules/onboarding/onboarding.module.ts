@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OnboardingController } from './presentation/controllers/onboarding.controller';
-import { OnboardingService } from './application/services/onboarding.service';
+import { OnboardingService } from './application/onboarding.service';
 import { OnboardingRepository } from './infrastructure/repositories/onboarding.repository';
 
 @Module({
