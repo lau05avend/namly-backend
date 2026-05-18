@@ -1,0 +1,193 @@
+---
+alwaysApply: true
+---
+
+# Namly Backend Architecture Rules
+
+## Project Context
+
+Namly is a backend-first food continuity platform for Colombian adults.
+
+The system is built for:
+- Strict multi-tenant data isolation
+- High maintainability
+- Modular domain separation
+- Low-friction UX
+- Scalable MVP architecture
+
+---
+
+## Tech Stack (Authoritative)
+
+- NestJS
+- TypeScript (strict mode)
+- PostgreSQL (via Prisma ORM)
+- Prisma ORM (PRIMARY database access layer)
+- Supabase (Auth + Object Storage ONLY)
+- EventEmitter2
+- class-validator / class-transformer
+
+---
+
+# Core Architecture Principles
+
+- Strict modular architecture (NestJS modules per domain)
+- Clean separation of concerns (presentation / application / domain / infrastructure)
+- Prefer composition over duplication
+- Keep services small and focused
+- Avoid overengineering and unnecessary abstractions
+- Reuse existing abstractions before creating new ones
+
+---
+
+# Mandatory System Architecture
+
+## Persistence Layer Rule (CRITICAL)
+
+- Prisma is the ONLY ORM for PostgreSQL access
+- All database access MUST go through Prisma repositories
+- Supabase MUST NOT be used for database queries
+
+### Supabase is restricted to:
+- Authentication (JWT validation only)
+- Object Storage (file uploads / downloads)
+
+---
+
+## Required Module Structure
+
+Every module MUST follow:
+
+modules/<module-name>/
+
+- application/
+  - services/
+  - use-cases/
+
+- domain/
+  - entities/
+  - interfaces/
+  - rules/
+
+- infrastructure/
+  - repositories/
+
+- presentation/
+  - controllers/
+  - dto/
+
+- <module>.module.ts
+
+---
+
+## Layer Responsibilities
+
+### Controllers
+- Handle HTTP only
+- Validate DTOs
+- Call application layer
+- No business logic
+- No direct Prisma access
+
+---
+
+### Application Layer
+- Orchestrates business logic
+- Coordinates repositories and events
+- Contains use cases
+- No database implementation details
+
+---
+
+### Domain Layer
+- Pure business rules
+- Entities and interfaces only
+- No framework dependencies
+
+---
+
+### Infrastructure Layer
+- Implements repositories using Prisma
+- Encapsulates database queries
+- Never exposes Prisma client directly to upper layers
+- Enforces multi-tenant filtering (profileId)
+
+---
+
+## Multi-Tenant Rule (CRITICAL)
+
+- Every user-owned query MUST be scoped by profileId
+- profileId MUST come from RequestContext
+- No query may bypass tenant isolation
+
+---
+
+## DTO Rules
+
+- Every endpoint MUST use DTOs
+- class-validator is mandatory
+- No raw request bodies allowed
+- DTOs belong in presentation layer only
+
+---
+
+## TypeScript Rules
+
+- Strict mode enabled
+- No `any`
+- Explicit return types for public methods
+- Prefer readonly structures where possible
+
+---
+
+## Event System Rules
+
+Use EventEmitter for:
+- streak updates
+- async computations
+- notifications
+- decoupled workflows
+
+Avoid synchronous cross-module coupling
+
+---
+
+## Logging Rules
+
+- Use NestJS Logger only
+- No console.log in production code
+
+---
+
+## Reusability Rules
+
+Before creating new code:
+- check existing abstractions
+- avoid duplication of repositories, DTOs, or logic
+- extend or compose existing components instead of duplicating
+
+---
+
+## Naming Conventions
+
+- kebab-case for files
+- PascalCase for classes
+- camelCase for methods
+
+---
+
+## Validation Rules
+
+- ValidationPipe is global
+- DTO validation must be declarative
+- No manual validation inside services
+
+---
+
+## Security Rules
+
+- Never expose Supabase raw user object externally
+- Always map auth user → internal CurrentUser model
+- All access must be tenant-aware via profileId
+
+---

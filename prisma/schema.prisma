@@ -1,0 +1,445 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AuthIdentity {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId  String    @map("profile_id") @db.Uuid
+  provider   String
+  externalId String    @map("external_id")
+  email      String?
+  lastSignIn DateTime? @map("last_sign_in") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("auth_identities")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model GuestSession {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId    String   @map("profile_id") @db.Uuid
+  deviceId     String   @map("device_id")
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastActiveAt DateTime @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("guest_sessions")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MealLog {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId       String           @map("profile_id") @db.Uuid
+  mealTypeId      String?          @map("meal_type_id") @db.Uuid
+  scheduledMealId String?          @map("scheduled_meal_id") @db.Uuid
+  recipeId        String?          @map("recipe_id") @db.Uuid
+  mediaUrl        String?          @map("media_url")
+  content         String?
+  score           Int?
+  notes           String?
+  loggedAt        DateTime         @map("logged_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  mealType        MealType?        @relation(fields: [mealTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile         Profile          @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recipe          Recipe?          @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduledMeal   ScheduledMeal?   @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tagLinks        MealLogTagLink[]
+
+  @@index([profileId, deletedAt], map: "idx_meal_logs_profile_deleted")
+  @@index([profileId, loggedAt], map: "idx_meal_logs_profile_logged_at")
+  @@map("meal_logs")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MealLogTagLink {
+  tagId     String   @map("tag_id") @db.Uuid
+  mealLogId String   @map("meal_logs_id") @db.Uuid
+  mealLog   MealLog  @relation(fields: [mealLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tagId, mealLogId])
+  @@map("meal_logs_tag_links")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MealType {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId       String?         @map("profile_id") @db.Uuid
+  name            String
+  sortOrder       Int             @map("sort_order")
+  isSystemDefined Boolean         @default(false) @map("is_system_defined")
+  isVisible       Boolean         @default(true) @map("is_visible")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  mealLogs        MealLog[]
+  profile         Profile?        @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduledMeals  ScheduledMeal[]
+
+  @@map("meal_types")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MeasurementUnit {
+  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  abbreviation      String
+  category          String                @unique(map: "idx_measurement_units_default_category", where: raw("(is_default = true)"))
+  isConvertible     Boolean               @default(false) @map("is_convertible")
+  isActive          Boolean               @default(true) @map("is_active")
+  isDefault         Boolean               @default(false) @map("is_default")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  recipeIngredients RecipeIngredient[]
+  volumeSettings    UserPlatformSetting[] @relation("VolumeUnitSettings")
+  weightSettings    UserPlatformSetting[] @relation("WeightUnitSettings")
+
+  @@map("measurement_units")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Notification {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId          String    @map("profile_id") @db.Uuid
+  type               String
+  title              String
+  body               String?
+  isRead             Boolean   @default(false) @map("is_read")
+  readAt             DateTime? @map("read_at") @db.Timestamptz(6)
+  relatedEntityId    String?   @map("related_entity_id") @db.Uuid
+  relatedEntityType  String?   @map("related_entity_type")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  profile            Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([profileId, isRead], map: "idx_notifications_profile_read")
+  @@map("notifications")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model OnboardingOption {
+  id            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId    String                   @map("question_id") @db.Uuid
+  linkedTagId   String?                  @map("linked_tag_id") @db.Uuid
+  label         String
+  iconName      String?                  @map("icon_name")
+  isDefault     Boolean                  @default(false) @map("is_default")
+  isActive      Boolean                  @default(true) @map("is_active")
+  sortOrder     Int                      @map("sort_order")
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  linkedTag     Tag?                     @relation(fields: [linkedTagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question      OnboardingQuestion       @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userOnboardingResponses UserOnboardingResponse[]
+
+  @@map("onboarding_options")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model OnboardingQuestion {
+  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionText     String                   @map("question_text")
+  inputType        String                   @map("input_type")
+  allowCustomInput Boolean                  @default(false) @map("allow_custom_input")
+  isActive         Boolean                  @default(true) @map("is_active")
+  sortOrder        Int                      @map("sort_order")
+  allowMultiple    Boolean                  @default(false) @map("allow_multiple")
+  maxSelections    Int?                     @map("max_selections")
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  options          OnboardingOption[]
+  userOnboardingResponses    UserOnboardingResponse[]
+
+  @@map("onboarding_questions")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Profile {
+  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  displayName             String?                  @map("display_name")
+  avatarUrl               String?                  @map("avatar_url")
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  authIdentities          AuthIdentity[]
+  guestSessions           GuestSession[]
+  mealLogs                MealLog[]
+  mealTypes               MealType[]
+  notifications           Notification[]
+  recipeFolders           RecipeFolder[]
+  recipes                 Recipe[]
+  scheduledMeals          ScheduledMeal[]
+  tags                    Tag[]
+  userDailyActivities     UserDailyActivity[]
+  userOnboardingResponses UserOnboardingResponse[]
+  userPlatformSetting     UserPlatformSetting?
+  userRecipeInteractions  UserRecipeInteraction[]
+  userStreaks             UserStreak[]
+
+  @@map("profiles")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RecipeFolderItem {
+  folderId String       @map("folder_id") @db.Uuid
+  recipeId String       @map("recipe_id") @db.Uuid
+  folder   RecipeFolder @relation(fields: [folderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recipe   Recipe       @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([folderId, recipeId])
+  @@map("recipe_folder_items")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RecipeFolder {
+  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId String             @map("profile_id") @db.Uuid
+  name      String
+  colorHex  String?            @map("color_hex")
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  items     RecipeFolderItem[]
+  profile   Profile            @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("recipe_folders")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RecipeIngredient {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId        String           @map("recipe_id") @db.Uuid
+  unitId          String?          @map("unit_id") @db.Uuid
+  name            String
+  quantity        Decimal?         @db.Decimal
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  recipe          Recipe           @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  measurementUnit MeasurementUnit? @relation(fields: [unitId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("recipe_ingredients")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RecipeStep {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId        String   @map("recipe_id") @db.Uuid
+  stepOrder       Int      @map("step_order")
+  description     String
+  durationMinutes Int?     @map("duration_minutes")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  recipe          Recipe   @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([recipeId, stepOrder])
+  @@map("recipe_steps")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RecipeTagLink {
+  recipeId String @map("recipe_id") @db.Uuid
+  tagId    String @map("tag_id") @db.Uuid
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([recipeId, tagId])
+  @@map("recipe_tag_links")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Recipe {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId              String?                 @map("profile_id") @db.Uuid
+  title                  String
+  description            String?
+  coverUrl               String?                 @map("cover_url")
+  isPublic               Boolean                 @default(false) @map("is_public")
+  isSuggested            Boolean                 @default(false) @map("is_suggested")
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  mealLogs               MealLog[]
+  folderItems            RecipeFolderItem[]
+  ingredients            RecipeIngredient[]
+  steps                  RecipeStep[]
+  tagLinks               RecipeTagLink[]
+  profile                Profile?                @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduledMealRecipes   ScheduledMealRecipe[]
+  userRecipeInteractions UserRecipeInteraction[]
+
+  @@index([profileId, deletedAt], map: "idx_recipes_profile_deleted")
+  @@map("recipes")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ScheduledMealRecipe {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduledMealId String        @map("scheduled_meal_id") @db.Uuid
+  recipeId        String        @map("recipe_id") @db.Uuid
+  sortOrder       Int           @map("sort_order")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  recipe          Recipe        @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduledMeal   ScheduledMeal @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([scheduledMealId, recipeId])
+  @@map("scheduled_meal_recipes")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ScheduledMealReminder {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduledMealId String        @map("scheduled_meal_id") @db.Uuid
+  reminderTime    DateTime      @map("reminder_time") @db.Time(6)
+  isNotified      Boolean       @default(false) @map("is_notified")
+  isActive        Boolean       @default(true) @map("is_active")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  scheduledMeal   ScheduledMeal @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([isActive, isNotified], map: "idx_reminders_active")
+  @@map("scheduled_meal_reminders")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ScheduledMeal {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId              String                  @map("profile_id") @db.Uuid
+  mealTypeId             String                  @map("meal_type_id") @db.Uuid
+  entryDate              DateTime                @map("entry_date") @db.Date
+  plannedTime            DateTime                @map("planned_time") @db.Time(6)
+  isExpress              Boolean                 @default(false) @map("is_express")
+  expressNote            String?                 @map("express_note")
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  mealLogs               MealLog[]
+  scheduledMealRecipes   ScheduledMealRecipe[]
+  scheduledMealReminders ScheduledMealReminder[]
+  mealType               MealType                @relation(fields: [mealTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile                Profile                 @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([profileId, entryDate], map: "idx_scheduled_meals_profile_date")
+  @@map("scheduled_meals")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Tag {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId       String?            @map("profile_id") @db.Uuid
+  category        String
+  name            String
+  iconName        String?            @map("icon_name")
+  isSystemDefined Boolean            @default(false) @map("is_system_defined")
+  isVisible       Boolean            @default(true) @map("is_visible")
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  mealLogLinks    MealLogTagLink[]
+  onboardingOptions OnboardingOption[]
+  recipeLinks     RecipeTagLink[]
+  profile         Profile?           @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([profileId, deletedAt], map: "idx_tags_profile_deleted")
+  @@map("tags")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserDailyActivity {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId            String    @map("profile_id") @db.Uuid
+  date                 DateTime  @db.Date
+  weekStart            DateTime? @map("week_start") @db.Date
+  mealsPlanned         Int       @default(0) @map("meals_planned")
+  mealsRegistered      Int       @default(0) @map("meals_registered")
+  completionPercentage Decimal?  @map("completion_percentage") @db.Decimal
+  countsForStreak      Boolean   @default(false) @map("counts_for_streak")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile              Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([profileId, date], map: "idx_user_daily_activity_profile_date")
+  @@map("user_daily_activity")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserOnboardingResponse {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId  String             @map("profile_id") @db.Uuid
+  questionId String             @map("question_id") @db.Uuid
+  optionId   String?            @map("option_id") @db.Uuid
+  customValue String?           @map("custom_value")
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  option     OnboardingOption?  @relation(fields: [optionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile    Profile            @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question   OnboardingQuestion @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("user_onboarding_responses")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserPlatformSetting {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId    String           @unique @map("profile_id") @db.Uuid
+  weightUnitId String?          @map("weight_unit_id") @db.Uuid
+  volumeUnitId String?          @map("volume_unit_id") @db.Uuid
+  language     String?
+  theme        String?
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile      Profile          @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  volumeUnit   MeasurementUnit? @relation("VolumeUnitSettings", fields: [volumeUnitId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  weightUnit   MeasurementUnit? @relation("WeightUnitSettings", fields: [weightUnitId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("user_platform_settings")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserRecipeInteraction {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId      String   @map("recipe_id") @db.Uuid
+  profileId     String   @map("profile_id") @db.Uuid
+  rating        Int?
+  publicComment String?  @map("public_comment")
+  privateNotes  String?  @map("private_notes")
+  isFavorite    Boolean  @default(false) @map("is_favorite")
+  isHidden      Boolean  @default(false) @map("is_hidden")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recipe        Recipe   @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([recipeId, profileId])
+  @@map("user_recipe_interactions")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserStreak {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId      String    @map("profile_id") @db.Uuid
+  currentStreak  Int       @default(0) @map("current_streak")
+  longestStreak  Int       @default(0) @map("longest_streak")
+  lastActiveDate DateTime? @map("last_active_date") @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("user_streaks")
+}

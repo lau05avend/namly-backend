@@ -1,0 +1,19 @@
+---
+alwaysApply: true
+---
+# Protected Architecture Rules
+
+Do not:
+- modify tsconfig.json unless explicitly requested
+- install dependencies automatically
+- change eslint/prettier configs automatically
+- restructure modules automatically
+- create new architectural patterns
+- replace Supabase architecture
+- introduce ORMs
+- generate mock implementations unless requested
+- change folder structure without permission
+- modify Prisma architecture or repositories without explicit request
+- change Supabase role (Auth/Storage separation)
+- modify RequestContext flow
+- introduce new persistence patterns
