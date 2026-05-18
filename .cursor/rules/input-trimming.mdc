@@ -1,0 +1,11 @@
+---
+description: Field-level input trimming on DTOs
+alwaysApply: true
+---
+
+# Input trimming
+
+- Trim string inputs with `@Trim()` from `@common/decorators/trim.decorator` on DTO properties (`body`, `query`).
+- Requires `ValidationPipe({ transform: true })` (already global in `main.ts`).
+- Do not use global trim middleware/interceptors; do not call `.trim()` in controllers or services.
+- Apply `@Trim()` to every new string field on request DTOs; assume trimmed values in business logic.
