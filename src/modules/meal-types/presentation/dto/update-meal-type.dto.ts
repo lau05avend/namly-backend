@@ -1,3 +1,4 @@
+import { Trim } from '@common/decorators/trim.decorator';
 import {
   Allow,
   IsInt,
@@ -31,6 +32,7 @@ export class UpdateMealTypeDto implements UpdateMealTypeParams {
   @Validate(AtLeastOneMealTypeFieldConstraint)
   _atLeastOneField?: unknown;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @IsNotEmpty()

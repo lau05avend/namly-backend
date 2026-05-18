@@ -1,3 +1,4 @@
+import { Trim } from '@common/decorators/trim.decorator';
 import {
   Allow,
   IsOptional,
@@ -37,11 +38,13 @@ export class UpdatePlatformSettingsDto implements UpdatePlatformSettingsParams {
   @IsUUID()
   volumeUnitId?: string | null;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @MaxLength(32)
   language?: string | null;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @MaxLength(32)

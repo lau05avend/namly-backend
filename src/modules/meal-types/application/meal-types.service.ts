@@ -36,6 +36,15 @@ export class MealTypesService {
       throw new ConflictException(`A meal type with sort order ${params.sortOrder} already exists`);
     }
 
+    const nameExists = await this.mealTypeRepository.existsUserMealTypeWithName(
+      profileId,
+      params.name,
+    );
+
+    if (nameExists) {
+      throw new ConflictException(`A meal type with name "${params.name}" already exists`);
+    }
+
     return this.mealTypeRepository.createUserMealType(profileId, params);
   }
 

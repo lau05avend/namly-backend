@@ -105,6 +105,17 @@ export class MealTypeRepository {
     return count > 0;
   }
 
+  async existsUserMealTypeWithName(profileId: string, name: string): Promise<boolean> {
+    const count = await this.prisma.mealType.count({
+      where: {
+        ...userMealTypeWhere(profileId),
+        name,
+      },
+    });
+
+    return count > 0;
+  }
+
   async createUserMealType(
     profileId: string,
     params: CreateMealTypeParams,

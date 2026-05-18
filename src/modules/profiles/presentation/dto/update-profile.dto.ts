@@ -1,3 +1,4 @@
+import { Trim } from '@common/decorators/trim.decorator';
 import {
   Allow,
   IsNotEmpty,
@@ -30,12 +31,14 @@ export class UpdateProfileDto implements UpdateProfileParams {
   @Validate(AtLeastOneProfileFieldConstraint)
   _atLeastOneField?: unknown;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
   displayName?: string;
 
+  @Trim()
   @IsOptional()
   @IsUrl()
   avatarUrl?: string;
