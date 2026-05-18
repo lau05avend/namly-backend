@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { OnboardingService } from './application/onboarding.service';
+import { OnboardingController } from './presentation/controllers/onboarding.controller';
+import { OnboardingService } from './application/services/onboarding.service';
+import { OnboardingRepository } from './infrastructure/repositories/onboarding.repository';
 
 @Module({
-  providers: [OnboardingService],
-  exports: [OnboardingService],
+  controllers: [OnboardingController],
+  providers: [OnboardingService, OnboardingRepository],
 })
 export class OnboardingModule {}
