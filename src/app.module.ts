@@ -18,6 +18,7 @@ import { ProfilesModule } from '@modules/profiles/profiles.module';
 import { GuestsModule } from '@modules/guests/guests.module';
 import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { TagsModule } from '@modules/tags/tags.module';
+import { MeasurementUnitsModule } from '@modules/measurement-units/measurement-units.module';
 import { RecipesModule } from '@modules/recipes/recipes.module';
 import { PlannerModule } from '@modules/planner/planner.module';
 import { MealLogsModule } from '@modules/meal-logs/meal-logs.module';
@@ -50,6 +51,7 @@ import { MealTypesModule } from '@modules/meal-types/meal-types.module';
     GuestsModule,
     OnboardingModule,
     TagsModule,
+    MeasurementUnitsModule,
     RecipesModule,
     PlannerModule,
     MealLogsModule,

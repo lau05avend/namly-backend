@@ -149,6 +149,7 @@ export class MealTypeRepository {
       data: {
         ...(params.name && { name: params.name }),
         ...(params.sortOrder && { sortOrder: params.sortOrder }),
+        updatedAt: new Date(),
       },
       select: mealTypeSelect,
     });

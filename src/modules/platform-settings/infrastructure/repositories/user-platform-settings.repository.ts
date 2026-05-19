@@ -65,6 +65,7 @@ export class UserPlatformSettingsRepository {
         ...(data.volumeUnitId && { volumeUnitId: data.volumeUnitId }),
         ...(data.language && { language: data.language }),
         ...(data.theme && { theme: data.theme }),
+        updatedAt: new Date(),
       },
       select: settingsSelect,
     });

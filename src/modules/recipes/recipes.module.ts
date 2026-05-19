@@ -1,18 +1,26 @@
 import { Module } from '@nestjs/common';
+import { CreateRecipeUseCase } from './application/use-cases/create-recipe.use-case';
+import { UpdateRecipeUseCase } from './application/use-cases/update-recipe.use-case';
 import { RecipesService } from './application/recipes.service';
-import { RecipeFoldersModule } from './recipe-folders/recipe-folders.module';
-import { RecipeIngredientsModule } from './recipe-ingredients/recipe-ingredients.module';
-import { RecipeStepsModule } from './recipe-steps/recipe-steps.module';
-import { RecipeInteractionsModule } from './recipe-interactions/recipe-interactions.module';
+import { RecipeIngredientRepository } from './infrastructure/repositories/recipe-ingredient.repository';
+import { RecipeRepository } from './infrastructure/repositories/recipe.repository';
+import { RecipeStepRepository } from './infrastructure/repositories/recipe-step.repository';
+import { RecipeTagLinkRepository } from './infrastructure/repositories/recipe-tag-link.repository';
+import { UserRecipeInteractionRepository } from './infrastructure/repositories/user-recipe-interaction.repository';
+import { RecipesController } from './presentation/controllers/recipes.controller';
 
 @Module({
-  providers: [RecipesService],
-  exports: [RecipesService],
-  imports: [
-    RecipeFoldersModule,
-    RecipeIngredientsModule,
-    RecipeStepsModule,
-    RecipeInteractionsModule,
+  controllers: [RecipesController],
+  providers: [
+    RecipesService,
+    CreateRecipeUseCase,
+    UpdateRecipeUseCase,
+    RecipeRepository,
+    RecipeIngredientRepository,
+    RecipeStepRepository,
+    RecipeTagLinkRepository,
+    UserRecipeInteractionRepository,
   ],
+  exports: [RecipesService],
 })
 export class RecipesModule {}

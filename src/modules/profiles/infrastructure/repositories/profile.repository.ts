@@ -36,7 +36,10 @@ export class ProfileRepository {
     try {
       const record = await this.prisma.profile.update({
         where: { id: profileId },
-        data,
+        data: {
+          ...data,
+          updatedAt: new Date(),
+        },
         select: profileSelect,
       });
 
