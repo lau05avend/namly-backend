@@ -36,7 +36,7 @@ export class CreateTagsDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
-  category!: string;
+  category!: string; // TODO: revisar migracion de category a enum
 
   @Allow()
   @Validate(CreateTagsShapeConstraint)

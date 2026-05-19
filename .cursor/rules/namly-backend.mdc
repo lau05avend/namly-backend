@@ -191,3 +191,195 @@ Before creating new code:
 - All access must be tenant-aware via profileId
 
 ---
+
+## Architectural Complexity Rules
+
+Do NOT introduce unnecessary abstractions.
+
+Default architecture flow:
+
+controller
+→ service
+→ repository
+
+This is the preferred approach for:
+- CRUD operations
+- simple business logic
+- direct entity management
+- lightweight modules
+
+Use cases are OPTIONAL and should ONLY be introduced when workflows become complex.
+
+---
+
+## Use Case Rules
+
+Use cases exist to orchestrate complex application workflows.
+
+A use case MAY:
+- coordinate multiple repositories
+- coordinate multiple services
+- manage transactions
+- emit events
+- enforce workflow consistency
+
+A use case MUST NOT:
+- contain raw Prisma queries
+- replace repositories
+- become a generic wrapper around services
+- exist for simple CRUD operations
+
+Correct use case examples:
+- create recipe aggregate
+- update recipe transactional sync
+- onboarding completion
+- streak recalculation
+- planner generation
+- reminder orchestration
+
+Incorrect use case examples:
+- get tags
+- create tag
+- get measurement units
+- basic CRUD endpoints
+
+---
+
+## Service Rules
+
+Services contain reusable business logic.
+
+Services SHOULD:
+- remain focused
+- encapsulate reusable domain/application logic
+- coordinate repositories for simple flows
+
+Services MUST NOT:
+- become large god-classes
+- contain unrelated responsibilities
+- directly depend on controllers
+
+---
+
+## Repository Rules (CRITICAL)
+
+Repositories are responsible ONLY for persistence.
+
+Repositories MUST:
+- encapsulate Prisma queries
+- receive transactions when necessary
+- remain small and predictable
+
+Repositories MUST NOT:
+- inject other repositories
+- contain orchestration logic
+- contain workflow logic
+- emit events
+- contain HTTP concerns
+
+Repository-to-repository injection is forbidden.
+
+---
+
+## Transaction Rules
+
+Complex transactional workflows MUST be orchestrated from the application layer.
+
+Use cases MAY open Prisma transactions and pass transaction clients to repositories.
+
+Correct:
+
+use case
+→ prisma transaction
+→ repositories
+
+Incorrect:
+
+repository
+→ repository
+→ hidden transactional orchestration
+
+---
+
+## Domain Boundary Rules
+
+Do NOT create NestJS modules purely from database tables.
+
+Sub-entities tightly coupled to a parent aggregate SHOULD remain inside the parent module.
+
+Examples:
+- recipe_steps
+- recipe_ingredients
+- recipe_tag_links
+- recipe_folder_items
+
+These are NOT standalone bounded contexts.
+
+Correct:
+recipes module
+  → internal repositories/services/entities
+
+Incorrect:
+recipe-steps module
+recipe-ingredients module
+
+Standalone modules should represent real business domains or workflows.
+
+Examples:
+- auth
+- planner
+- streaks
+- notifications
+- onboarding
+
+---
+
+## Prisma Rules
+
+Prisma repositories are the ONLY database access layer.
+
+Never expose raw Prisma models directly to controllers.
+
+Always map database results to domain/application responses when needed.
+
+Prisma transactions are allowed ONLY in:
+- use cases
+- complex application services
+
+Never call Prisma directly from controllers.
+
+---
+
+## Input Transformation Rules
+
+Use DTO decorators for transformations.
+
+Use @Trim() explicitly on external string input fields.
+
+Do NOT use global recursive trimming interceptors.
+
+Avoid automatic trimming for:
+- notes
+- comments
+- long descriptions
+- rich text fields
+
+Prefer explicit transformation over implicit mutation.
+
+---
+
+## Simplicity Rule (CRITICAL)
+
+Favor clarity and maintainability over architectural purity.
+
+Avoid:
+- premature CQRS
+- unnecessary interfaces
+- excessive abstraction layers
+- enterprise patterns without real need
+
+The project prioritizes:
+- readability
+- consistency
+- velocity
+- maintainability

@@ -154,6 +154,7 @@ export class TagRepository {
         category: params.category,
         name: params.name,
         ...(params.iconName !== undefined && { iconName: params.iconName }),
+        updatedAt: new Date(),
       },
       select: tagSelect,
     });
