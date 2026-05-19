@@ -36,8 +36,9 @@ export class RecipeRepository {
     profileId: string,
     filter: RecipeListFilter,
     tagIds?: readonly string[],
+    folderId?: string,
   ): Promise<RecipeListItemEntity[]> {
-    const where = this.buildListWhere(profileId, filter, tagIds);
+    const where = this.buildListWhere(profileId, filter, tagIds, folderId);
 
     const records = await this.prisma.recipe.findMany({
       where,
@@ -176,6 +177,7 @@ export class RecipeRepository {
     profileId: string,
     filter: RecipeListFilter,
     tagIds?: readonly string[],
+    folderId?: string,
   ): Prisma.RecipeWhereInput {
     let filterWhere: Prisma.RecipeWhereInput;
 
@@ -211,18 +213,27 @@ export class RecipeRepository {
         break;
     }
 
-    if (!tagIds || tagIds.length === 0) {
-      return filterWhere;
+    const conditions: Prisma.RecipeWhereInput[] = [filterWhere];
+
+    if (folderId) {
+      conditions.push({
+        folderItems: { some: { folderId } },
+      });
     }
 
-    return {
-      AND: [
-        filterWhere,
+    if (tagIds && tagIds.length > 0) {
+      conditions.push(
         ...tagIds.map((tagId) => ({
           tagLinks: { some: { tagId } },
         })),
-      ],
-    };
+      );
+    }
+
+    if (conditions.length === 1) {
+      return filterWhere;
+    }
+
+    return { AND: conditions };
   }
 
   private detailSelect(profileId: string) {
@@ -256,7 +267,7 @@ export class RecipeRepository {
         },
       },
       tagLinks: {
-        where: { tag: { profileId, deletedAt: null } },
+        where: { tag: { deletedAt: null } },
         select: {
           tag: {
             select: {

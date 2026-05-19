@@ -16,10 +16,8 @@ import { RecipesService } from '../../application/recipes.service';
 import { CreateRecipeDto } from '../dto/create-recipe.dto';
 import { ListRecipesQueryDto } from '../dto/list-recipes-query.dto';
 import { RecipeDetailDto } from '../dto/recipe-detail.dto';
-import { RecipeInteractionDto } from '../dto/recipe-interaction.dto';
 import { RecipeListItemDto } from '../dto/recipe-list-item.dto';
 import { UpdateRecipeDto } from '../dto/update-recipe.dto';
-import { UpsertRecipeInteractionDto } from '../dto/upsert-recipe-interaction.dto';
 import { RecipeMapper } from '../mappers/recipe.mapper';
 
 @Controller('recipes')
@@ -31,7 +29,12 @@ export class RecipesController {
     @CurrentProfileId() profileId: string,
     @Query() query: ListRecipesQueryDto,
   ): Promise<RecipeListItemDto[]> {
-    const recipes = await this.recipesService.listRecipes(profileId, query.filter, query.tags);
+    const recipes = await this.recipesService.listRecipes(
+      profileId,
+      query.filter,
+      query.tags,
+      query.folderId,
+    );
 
     return RecipeMapper.toListItemDtoList(recipes);
   }
@@ -44,38 +47,6 @@ export class RecipesController {
     const recipe = await this.recipesService.createRecipe(profileId, body);
 
     return RecipeMapper.toDetailDto(recipe);
-  }
-
-  @Get(':id/interactions')
-  async getInteraction(
-    @CurrentProfileId() profileId: string,
-    @Param('id', ParseUUIDPipe) recipeId: string,
-  ): Promise<RecipeInteractionDto> {
-    const interaction = await this.recipesService.getInteraction(recipeId, profileId);
-
-    return RecipeMapper.toInteractionDto(interaction);
-  }
-
-  @Post(':id/interactions')
-  async createInteraction(
-    @CurrentProfileId() profileId: string,
-    @Param('id', ParseUUIDPipe) recipeId: string,
-    @Body() body: UpsertRecipeInteractionDto,
-  ): Promise<RecipeInteractionDto> {
-    const interaction = await this.recipesService.upsertInteraction(recipeId, profileId, body);
-
-    return RecipeMapper.toInteractionDto(interaction);
-  }
-
-  @Patch(':id/interactions')
-  async patchInteraction(
-    @CurrentProfileId() profileId: string,
-    @Param('id', ParseUUIDPipe) recipeId: string,
-    @Body() body: UpsertRecipeInteractionDto,
-  ): Promise<RecipeInteractionDto> {
-    const interaction = await this.recipesService.upsertInteraction(recipeId, profileId, body);
-
-    return RecipeMapper.toInteractionDto(interaction);
   }
 
   @Get(':id')
