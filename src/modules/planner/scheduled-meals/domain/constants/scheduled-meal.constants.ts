@@ -1,0 +1,2 @@
+export const SCHEDULED_MEAL_MAX_RECIPES = 10;
+export const SCHEDULED_MEAL_MIN_RECIPES = 1;

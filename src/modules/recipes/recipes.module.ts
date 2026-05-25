@@ -33,6 +33,6 @@ import { RecipesController } from './presentation/controllers/recipes.controller
     RecipeFolderItemRepository,
     UserRecipeInteractionRepository,
   ],
-  exports: [RecipesService],
+  exports: [RecipesService, RecipeAccessService],
 })
 export class RecipesModule {}

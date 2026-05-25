@@ -1,0 +1,18 @@
+# Archivos de build y compilación
+dist/
+dist/**
+.tsbuildinfo
+
+# Dependencias
+node_modules/
+node_modules/**
+
+# Residuos de logs o archivos de configuración de sistema
+*.log
+.DS_Store
+.vscode/
+
+# Ignorar archivos compilados que se filtran a veces
+*.js
+*.d.ts
+*.js.map

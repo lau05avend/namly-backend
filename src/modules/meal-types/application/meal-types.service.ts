@@ -73,4 +73,12 @@ export class MealTypesService {
       throw new NotFoundException('Meal type not found');
     }
   }
+
+  async assertAccessibleForProfile(profileId: string, mealTypeId: string): Promise<void> {
+    const accessible = await this.mealTypeRepository.isAccessibleForProfile(profileId, mealTypeId);
+
+    if (!accessible) {
+      throw new NotFoundException('Meal type not found');
+    }
+  }
 }

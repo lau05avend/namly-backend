@@ -106,11 +106,7 @@ export class RecipeFoldersService {
       return;
     }
 
-    await Promise.all(
-      recipeIdsToAdd.map((recipeId) =>
-        this.recipeAccessService.assertRecipeAccessible(recipeId, profileId),
-      ),
-    );
+    await this.recipeAccessService.assertRecipesAccessible(profileId, recipeIdsToAdd);
 
     await this.recipeFolderItemRepository.createMany(folderId, recipeIdsToAdd);
   }

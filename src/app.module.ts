@@ -24,7 +24,6 @@ import { PlannerModule } from '@modules/planner/planner.module';
 import { MealLogsModule } from '@modules/meal-logs/meal-logs.module';
 import { StreaksModule } from '@modules/streaks/streaks.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
-import { SettingsModule } from '@modules/settings/settings.module';
 import { PlatformSettingsModule } from '@modules/platform-settings/platform-settings.module';
 import { MealTypesModule } from '@modules/meal-types/meal-types.module';
 
@@ -57,7 +56,6 @@ import { MealTypesModule } from '@modules/meal-types/meal-types.module';
     MealLogsModule,
     StreaksModule,
     NotificationsModule,
-    SettingsModule,
     PlatformSettingsModule,
     MealTypesModule,
   ],

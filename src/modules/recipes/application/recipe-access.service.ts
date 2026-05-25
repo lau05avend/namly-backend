@@ -13,6 +13,12 @@ export class RecipeAccessService {
     }
   }
 
+  async assertRecipesAccessible(profileId: string, recipeIds: readonly string[]): Promise<void> {
+    await Promise.all(
+      recipeIds.map((recipeId) => this.assertRecipeAccessible(recipeId, profileId)),
+    );
+  }
+
   async assertOwnerCanMutate(recipeId: string, profileId: string): Promise<void> {
     const owned = await this.recipeRepository.findOwnedById(recipeId, profileId);
 

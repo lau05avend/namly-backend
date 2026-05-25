@@ -94,6 +94,21 @@ export class MealTypeRepository {
     });
   }
 
+  async isAccessibleForProfile(profileId: string, mealTypeId: string): Promise<boolean> {
+    const count = await this.prisma.mealType.count({
+      where: {
+        id: mealTypeId,
+        deletedAt: null,
+        OR: [
+          { profileId, isSystemDefined: false },
+          { profileId: null, isSystemDefined: true, isVisible: true },
+        ],
+      },
+    });
+
+    return count > 0;
+  }
+
   async existsUserMealTypeWithSortOrder(profileId: string, sortOrder: number): Promise<boolean> {
     const count = await this.prisma.mealType.count({
       where: {
