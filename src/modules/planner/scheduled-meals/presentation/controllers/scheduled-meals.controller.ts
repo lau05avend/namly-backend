@@ -20,10 +20,26 @@ import { ScheduledMealDto } from '../dto/scheduled-meal.dto';
 import { ScheduledMealsCalendarDto } from '../dto/scheduled-meals-calendar.dto';
 import { UpdateScheduledMealDto } from '../dto/update-scheduled-meal.dto';
 import { ScheduledMealMapper } from '../mappers/scheduled-meal.mapper';
+import { ScheduledMealSuggestionsQueryDto } from '../dto/scheduled-meal-suggestions-query.dto';
+import { ScheduledMealSuggestionDto } from '../dto/scheduled-meal-suggestion.dto';
+import { ScheduledMealSuggestionMapper } from '../mappers/scheduled-meal-suggestion.mapper';
 
 @Controller('scheduled-meals')
 export class ScheduledMealsController {
   constructor(private readonly scheduledMealsService: ScheduledMealsService) {}
+
+  @Get('suggestions')
+  async getSuggestions(
+    @CurrentProfileId() profileId: string,
+    @Query() query: ScheduledMealSuggestionsQueryDto,
+  ): Promise<ScheduledMealSuggestionDto[]> {
+    const suggestions = await this.scheduledMealsService.getSuggestionsForMealLog(
+      profileId,
+      query.loggedAt,
+    );
+
+    return ScheduledMealSuggestionMapper.toDtoList(suggestions);
+  }
 
   @Get('calendar')
   async getCalendar(

@@ -41,24 +41,23 @@ model GuestSession {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MealLog {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId       String           @map("profile_id") @db.Uuid
-  mealTypeId      String?          @map("meal_type_id") @db.Uuid
-  scheduledMealId String?          @map("scheduled_meal_id") @db.Uuid
-  recipeId        String?          @map("recipe_id") @db.Uuid
-  mediaUrl        String?          @map("media_url")
-  content         String?
-  score           Int?
-  notes           String?
-  loggedAt        DateTime         @map("logged_at") @db.Timestamptz(6)
-  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
-  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(6)
-  mealType        MealType?        @relation(fields: [mealTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  profile         Profile          @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  recipe          Recipe?          @relation(fields: [recipeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  scheduledMeal   ScheduledMeal?   @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tagLinks        MealLogTagLink[]
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId        String             @map("profile_id") @db.Uuid
+  mealTypeId       String?            @map("meal_type_id") @db.Uuid
+  scheduledMealId  String?            @map("scheduled_meal_id") @db.Uuid
+  mediaUrl         String?            @map("media_url")
+  content          String?
+  score            Int?
+  notes            String?
+  loggedAt         DateTime           @map("logged_at") @db.Timestamptz(6)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  meal_log_recipes meal_log_recipes[]
+  mealType         MealType?          @relation(fields: [mealTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile          Profile            @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduledMeal    ScheduledMeal?     @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tagLinks         MealLogTagLink[]
 
   @@index([profileId, deletedAt], map: "idx_meal_logs_profile_deleted")
   @@index([profileId, loggedAt], map: "idx_meal_logs_profile_logged_at")
@@ -67,10 +66,10 @@ model MealLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MealLogTagLink {
-  tagId     String   @map("tag_id") @db.Uuid
-  mealLogId String   @map("meal_logs_id") @db.Uuid
-  mealLog   MealLog  @relation(fields: [mealLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tagId     String  @map("tag_id") @db.Uuid
+  mealLogId String  @map("meal_logs_id") @db.Uuid
+  mealLog   MealLog @relation(fields: [mealLogId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tagId, mealLogId])
   @@map("meal_logs_tag_links")
@@ -115,17 +114,17 @@ model MeasurementUnit {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Notification {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId          String    @map("profile_id") @db.Uuid
-  type               String
-  title              String
-  body               String?
-  isRead             Boolean   @default(false) @map("is_read")
-  readAt             DateTime? @map("read_at") @db.Timestamptz(6)
-  relatedEntityId    String?   @map("related_entity_id") @db.Uuid
-  relatedEntityType  String?   @map("related_entity_type")
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  profile            Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId         String    @map("profile_id") @db.Uuid
+  type              String
+  title             String
+  body              String?
+  isRead            Boolean   @default(false) @map("is_read")
+  readAt            DateTime? @map("read_at") @db.Timestamptz(6)
+  relatedEntityId   String?   @map("related_entity_id") @db.Uuid
+  relatedEntityType String?   @map("related_entity_type")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  profile           Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([profileId, isRead], map: "idx_notifications_profile_read")
   @@map("notifications")
@@ -133,18 +132,18 @@ model Notification {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model OnboardingOption {
-  id            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionId    String                   @map("question_id") @db.Uuid
-  linkedTagId   String?                  @map("linked_tag_id") @db.Uuid
-  label         String
-  iconName      String?                  @map("icon_name")
-  isDefault     Boolean                  @default(false) @map("is_default")
-  isActive      Boolean                  @default(true) @map("is_active")
-  sortOrder     Int                      @map("sort_order")
-  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
-  linkedTag     Tag?                     @relation(fields: [linkedTagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  question      OnboardingQuestion       @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId              String                   @map("question_id") @db.Uuid
+  linkedTagId             String?                  @map("linked_tag_id") @db.Uuid
+  label                   String
+  iconName                String?                  @map("icon_name")
+  isDefault               Boolean                  @default(false) @map("is_default")
+  isActive                Boolean                  @default(true) @map("is_active")
+  sortOrder               Int                      @map("sort_order")
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  linkedTag               Tag?                     @relation(fields: [linkedTagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question                OnboardingQuestion       @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userOnboardingResponses UserOnboardingResponse[]
 
   @@map("onboarding_options")
@@ -153,18 +152,18 @@ model OnboardingOption {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model OnboardingQuestion {
-  id               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionText     String                   @map("question_text")
-  inputType        String                   @map("input_type")
-  allowCustomInput Boolean                  @default(false) @map("allow_custom_input")
-  isActive         Boolean                  @default(true) @map("is_active")
-  sortOrder        Int                      @map("sort_order")
-  allowMultiple    Boolean                  @default(false) @map("allow_multiple")
-  maxSelections    Int?                     @map("max_selections")
-  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
-  options          OnboardingOption[]
-  userOnboardingResponses    UserOnboardingResponse[]
+  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionText            String                   @map("question_text")
+  inputType               String                   @map("input_type")
+  allowCustomInput        Boolean                  @default(false) @map("allow_custom_input")
+  isActive                Boolean                  @default(true) @map("is_active")
+  sortOrder               Int                      @map("sort_order")
+  allowMultiple           Boolean                  @default(false) @map("allow_multiple")
+  maxSelections           Int?                     @map("max_selections")
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  options                 OnboardingOption[]
+  userOnboardingResponses UserOnboardingResponse[]
 
   @@map("onboarding_questions")
 }
@@ -272,7 +271,7 @@ model Recipe {
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
-  mealLogs               MealLog[]
+  meal_log_recipes       meal_log_recipes[]
   folderItems            RecipeFolderItem[]
   ingredients            RecipeIngredient[]
   steps                  RecipeStep[]
@@ -339,20 +338,20 @@ model ScheduledMeal {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tag {
-  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId       String?            @map("profile_id") @db.Uuid
-  category        String
-  name            String
-  iconName        String?            @map("icon_name")
-  isSystemDefined Boolean            @default(false) @map("is_system_defined")
-  isVisible       Boolean            @default(true) @map("is_visible")
-  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
-  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
-  mealLogLinks    MealLogTagLink[]
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId         String?            @map("profile_id") @db.Uuid
+  category          String
+  name              String
+  iconName          String?            @map("icon_name")
+  isSystemDefined   Boolean            @default(false) @map("is_system_defined")
+  isVisible         Boolean            @default(true) @map("is_visible")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  mealLogLinks      MealLogTagLink[]
   onboardingOptions OnboardingOption[]
-  recipeLinks     RecipeTagLink[]
-  profile         Profile?           @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recipeLinks       RecipeTagLink[]
+  profile           Profile?           @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([profileId, deletedAt], map: "idx_tags_profile_deleted")
   @@map("tags")
@@ -379,15 +378,15 @@ model UserDailyActivity {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UserOnboardingResponse {
-  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId  String             @map("profile_id") @db.Uuid
-  questionId String             @map("question_id") @db.Uuid
-  optionId   String?            @map("option_id") @db.Uuid
-  customValue String?           @map("custom_value")
-  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  option     OnboardingOption?  @relation(fields: [optionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  profile    Profile            @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  question   OnboardingQuestion @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId   String             @map("profile_id") @db.Uuid
+  questionId  String             @map("question_id") @db.Uuid
+  optionId    String?            @map("option_id") @db.Uuid
+  customValue String?            @map("custom_value")
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  option      OnboardingOption?  @relation(fields: [optionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profile     Profile            @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question    OnboardingQuestion @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("user_onboarding_responses")
 }
@@ -442,4 +441,19 @@ model UserStreak {
   profile        Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("user_streaks")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model meal_log_recipes {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  meal_log_id String   @db.Uuid
+  recipe_id   String   @db.Uuid
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  meal_logs   MealLog  @relation(fields: [meal_log_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_meal_log_recipes_meal_log")
+  recipes     Recipe   @relation(fields: [recipe_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_meal_log_recipes_recipe")
+
+  @@unique([meal_log_id, recipe_id], map: "uq_meal_log_recipe_unique")
+  @@index([meal_log_id], map: "idx_meal_log_recipes_meal_log")
+  @@index([recipe_id], map: "idx_meal_log_recipes_recipe")
 }
