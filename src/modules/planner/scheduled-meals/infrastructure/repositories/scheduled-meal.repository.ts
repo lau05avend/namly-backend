@@ -203,8 +203,12 @@ export class ScheduledMealRepository {
     }));
   }
 
-  hasMealLog(record: Pick<ScheduledMealRecord, 'mealLogs'>): boolean {
-    return record.mealLogs.length > 0;
+  hasMealLog(
+    record: Pick<ScheduledMealRecord, 'mealLogs'>,
+    excludeMealLogId?: string | null,
+  ): boolean {
+    const mealLogsIds = record.mealLogs.filter((item) => item.id !== excludeMealLogId);
+    return mealLogsIds.length > 0;
   }
 
   private recordSelect() {

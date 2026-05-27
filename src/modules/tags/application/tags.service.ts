@@ -87,6 +87,27 @@ export class TagsService {
     return updated;
   }
 
+  async assertTagsAccessible(profileId: string, tagIds: readonly string[]): Promise<void> {
+    const uniqueTagIds = [...new Set(tagIds)];
+
+    if (uniqueTagIds.length !== tagIds.length) {
+      throw new BadRequestException('Duplicate tag IDs in request');
+    }
+
+    if (uniqueTagIds.length === 0) {
+      return;
+    }
+
+    const accessibleCount = await this.tagRepository.countAccessibleForProfile(
+      profileId,
+      uniqueTagIds,
+    );
+
+    if (accessibleCount !== uniqueTagIds.length) {
+      throw new NotFoundException('One or more tags were not found');
+    }
+  }
+
   async deleteUserTag(profileId: string, tagId: string): Promise<void> {
     const deleted = await this.tagRepository.softDeleteUserTag(profileId, tagId);
 

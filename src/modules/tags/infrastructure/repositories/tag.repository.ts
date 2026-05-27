@@ -162,6 +162,23 @@ export class TagRepository {
     return this.toEntity(record);
   }
 
+  async countAccessibleForProfile(profileId: string, tagIds: readonly string[]): Promise<number> {
+    if (tagIds.length === 0) {
+      return 0;
+    }
+
+    return this.prisma.tag.count({
+      where: {
+        id: { in: [...tagIds] },
+        deletedAt: null,
+        OR: [
+          { profileId, isSystemDefined: false },
+          { profileId: null, isSystemDefined: true, isVisible: true }, // TODO: Revisar logica de estas condicionales con isSystemDefined
+        ],
+      },
+    });
+  }
+
   async softDeleteUserTag(profileId: string, tagId: string): Promise<TagEntity | null> {
     const owned = await this.findOwnedUserTag(profileId, tagId);
 

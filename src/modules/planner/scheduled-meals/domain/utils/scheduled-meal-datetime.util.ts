@@ -8,6 +8,14 @@ export function parseEntryDate(dateStr: string): Date {
   return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
 }
 
+export function parseLocalEntryDate(loggedAtStr: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(loggedAtStr);
+  if (!match) {
+    throw new Error('Invalid logged at format');
+  }
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
 export function parsePlannedTime(timeStr: string): Date {
   const parts = timeStr.split(':');
   const hours = Number(parts[0]);
@@ -57,6 +65,27 @@ export function comparePlannedMoments(
   return normalizePlannedTime(plannedTimeA).localeCompare(normalizePlannedTime(plannedTimeB));
 }
 
+export function toPlannedInstant(entryDate: Date, plannedTime: Date): Date {
+  const dateStr = formatEntryDate(entryDate);
+  const timeStr = formatPlannedTime(plannedTime);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+
+  return new Date(year, month - 1, day, hours, minutes, seconds, 0);
+}
+
+export function formatFloatingLocalEntryDate(instant: Date): string {
+  return getFloatingLocalNowParts(instant).entryDate;
+}
+
+export function getLocalEntryDateDayRange(entryDate: string): { start: Date; end: Date } {
+  const start = parseLocalEntryDate(entryDate);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return { start, end };
+}
+
 export function getFloatingLocalNowParts(now: Date = new Date()): {
   entryDate: string;
   plannedTime: string;
@@ -72,6 +101,15 @@ export function getFloatingLocalNowParts(now: Date = new Date()): {
     entryDate: `${year}-${month}-${day}`,
     plannedTime: `${hours}:${minutes}:${seconds}`,
   };
+}
+
+export function formatTimeToLocalString(loggedAt: Date): string {
+  return loggedAt.toLocaleTimeString('es-CO', {
+    timeZone: 'America/Bogota', // TODO: Ajusta a hora Colombia, recibir esto como parámetro
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 // TODO: mirar con history calendar sí reusar esta función
