@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { ScheduledMealsService } from '@modules/planner/scheduled-meals/application/scheduled-meals.service';
@@ -10,7 +11,12 @@ import type { UpdateMealLogParams } from '../../domain/interfaces/update-meal-lo
 import { MealLogRecipeRepository } from '../../infrastructure/repositories/meal-log-recipe.repository';
 import { MealLogRepository } from '../../infrastructure/repositories/meal-log.repository';
 import { MealLogTagLinkRepository } from '../../infrastructure/repositories/meal-log-tag-link.repository';
+import {
+  MEAL_LOG_UPDATED_EVENT,
+  MealLogUpdatedEvent,
+} from '../../domain/events/meal-log-updated.event';
 import { toMealLogDetailEntity } from '../meal-log-entity.mapper';
+import { formatFloatingLocalEntryDate } from '@/modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
 
 @Injectable()
 export class UpdateMealLogUseCase {
@@ -23,6 +29,7 @@ export class UpdateMealLogUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly tagsService: TagsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -35,6 +42,11 @@ export class UpdateMealLogUseCase {
     if (!owned) {
       return null;
     }
+
+    const previousLoggedAt =
+      params.loggedAt !== undefined
+        ? await this.mealLogRepository.findLoggedAtForProfile(mealLogId, profileId)
+        : null;
 
     if (params.scheduledMealId) {
       await this.scheduledMealsService.assertLinkableForMealLog(
@@ -108,6 +120,16 @@ export class UpdateMealLogUseCase {
     if (!record) {
       return null;
     }
+
+    const entryDate = formatFloatingLocalEntryDate(record.loggedAt);
+    const previousEntryDate = previousLoggedAt
+      ? formatFloatingLocalEntryDate(previousLoggedAt)
+      : undefined;
+
+    this.eventEmitter.emit(
+      MEAL_LOG_UPDATED_EVENT,
+      new MealLogUpdatedEvent(profileId, mealLogId, entryDate, previousEntryDate),
+    );
 
     return toMealLogDetailEntity(record, this.mealLogRepository);
   }

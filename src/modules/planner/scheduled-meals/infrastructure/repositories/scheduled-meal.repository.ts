@@ -118,6 +118,22 @@ export class ScheduledMealRepository {
     return record;
   }
 
+  async countByProfileAndDate(
+    profileId: string,
+    entryDate: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number> {
+    const client = tx ?? this.prisma;
+
+    return client.scheduledMeal.count({
+      where: {
+        profileId,
+        ...notDeleted,
+        entryDate: parseEntryDate(entryDate),
+      },
+    });
+  }
+
   async findDistinctEntryDatesForMonth(
     profileId: string,
     year: number,

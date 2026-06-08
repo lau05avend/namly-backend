@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { RecipeAccessService } from '@modules/recipes/application/recipe-access.service';
@@ -8,6 +9,10 @@ import { parseEntryDate, parsePlannedTime } from '../../domain/utils/scheduled-m
 import { ScheduledMealRecipeRepository } from '../../infrastructure/repositories/scheduled-meal-recipe.repository';
 import { ScheduledMealRepository } from '../../infrastructure/repositories/scheduled-meal.repository';
 import { PlannerStatusService } from '../planner-status.service';
+import {
+  SCHEDULED_MEAL_CREATED_EVENT,
+  ScheduledMealCreatedEvent,
+} from '../../domain/events/scheduled-meal-created.event';
 import { toScheduledMealEntity } from '../scheduled-meal-entity.mapper';
 
 @Injectable()
@@ -21,6 +26,7 @@ export class CreateScheduledMealUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly plannerStatusService: PlannerStatusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -62,6 +68,11 @@ export class CreateScheduledMealUseCase {
     }
 
     const statuses = await this.plannerStatusService.resolveStatusesForMeal(profileId, record);
+
+    this.eventEmitter.emit(
+      SCHEDULED_MEAL_CREATED_EVENT,
+      new ScheduledMealCreatedEvent(profileId, scheduledMealId, params.entryDate),
+    );
 
     return toScheduledMealEntity(
       record,
