@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { ScheduledMealsService } from '@modules/planner/scheduled-meals/application/scheduled-meals.service';
@@ -15,6 +16,10 @@ import type { CreateMealLogParams } from '../../domain/interfaces/create-meal-lo
 import { MealLogRecipeRepository } from '../../infrastructure/repositories/meal-log-recipe.repository';
 import { MealLogRepository } from '../../infrastructure/repositories/meal-log.repository';
 import { MealLogTagLinkRepository } from '../../infrastructure/repositories/meal-log-tag-link.repository';
+import {
+  MEAL_LOG_CREATED_EVENT,
+  MealLogCreatedEvent,
+} from '../../domain/events/meal-log-created.event';
 import { toMealLogDetailEntity } from '../meal-log-entity.mapper';
 
 @Injectable()
@@ -30,6 +35,7 @@ export class CreateMealLogUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly tagsService: TagsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(profileId: string, params: CreateMealLogParams): Promise<MealLogDetailEntity> {
@@ -87,6 +93,11 @@ export class CreateMealLogUseCase {
       );
       throw new InternalServerErrorException('Meal log was created but could not be loaded');
     }
+
+    this.eventEmitter.emit(
+      MEAL_LOG_CREATED_EVENT,
+      new MealLogCreatedEvent(profileId, mealLogId, record.loggedAt),
+    );
 
     return toMealLogDetailEntity(record, this.mealLogRepository);
   }

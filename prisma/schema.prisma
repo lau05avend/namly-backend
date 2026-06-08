@@ -369,6 +369,7 @@ model UserDailyActivity {
   completionPercentage Decimal?  @map("completion_percentage") @db.Decimal
   countsForStreak      Boolean   @default(false) @map("counts_for_streak")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// TODO: colocar flag @updatedAt a campos updatedAt para actualizacion automatica
   updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
   profile              Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -431,20 +432,22 @@ model UserRecipeInteraction {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UserStreak {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId      String    @map("profile_id") @db.Uuid
-  currentStreak  Int       @default(0) @map("current_streak")
-  longestStreak  Int       @default(0) @map("longest_streak")
-  lastActiveDate DateTime? @map("last_active_date") @db.Date
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId                 String    @map("profile_id") @db.Uuid
+  currentStreak             Int       @default(0) @map("current_streak")
+  longestStreak             Int       @default(0) @map("longest_streak")
+  lastActiveDate            DateTime? @map("last_active_date") @db.Date
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  currentStreakStartDate    DateTime? @map("current_streak_start_date") @db.Date
+  profile                   Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([currentStreakStartDate], map: "idx_user_streaks_current_streak_start_date")
   @@map("user_streaks")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model meal_log_recipes {
+model meal_log_recipes { /// TODO: pasar esto a camelCase
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   meal_log_id String   @db.Uuid
   recipe_id   String   @db.Uuid

@@ -219,6 +219,36 @@ export class MealLogRepository {
     return [...uniqueDates].sort();
   }
 
+  async findLoggedAtForProfile(mealLogId: string, profileId: string): Promise<Date | null> {
+    const record = await this.prisma.mealLog.findFirst({
+      where: {
+        id: mealLogId,
+        profileId,
+        ...notDeleted,
+      },
+      select: { loggedAt: true },
+    });
+
+    return record?.loggedAt ?? null;
+  }
+
+  async countByProfileAndEntryDate(
+    profileId: string,
+    entryDate: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number> {
+    const { start, end } = getLocalEntryDateDayRange(entryDate);
+    const client = tx ?? this.prisma;
+
+    return client.mealLog.count({
+      where: {
+        profileId,
+        ...notDeleted,
+        loggedAt: { gte: start, lte: end },
+      },
+    });
+  }
+
   async isOwnedByProfile(mealLogId: string, profileId: string): Promise<boolean> {
     const count = await this.prisma.mealLog.count({
       where: {

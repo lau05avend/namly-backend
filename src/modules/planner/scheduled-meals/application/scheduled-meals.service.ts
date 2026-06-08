@@ -1,8 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ScheduledMealEntity } from '../domain/entities/scheduled-meal.entity';
 import type { CreateScheduledMealParams } from '../domain/interfaces/create-scheduled-meal-params.interface';
 import type { UpdateScheduledMealParams } from '../domain/interfaces/update-scheduled-meal-params.interface';
 import {
+  SCHEDULED_MEAL_DELETED_EVENT,
+  ScheduledMealDeletedEvent,
+} from '../domain/events/scheduled-meal-deleted.event';
+import {
+  formatEntryDate,
   formatFloatingLocalEntryDate,
   formatPlannedTime,
   getMonthDateRange,
@@ -23,6 +29,7 @@ export class ScheduledMealsService {
     private readonly plannerStatusService: PlannerStatusService,
     private readonly createScheduledMealUseCase: CreateScheduledMealUseCase,
     private readonly updateScheduledMealUseCase: UpdateScheduledMealUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async listByDate(profileId: string, entryDate: string): Promise<ScheduledMealEntity[]> {
@@ -158,10 +165,29 @@ export class ScheduledMealsService {
   }
 
   async delete(scheduledMealId: string, profileId: string): Promise<void> {
+    const record = await this.scheduledMealRepository.findByIdForProfile(
+      scheduledMealId,
+      profileId,
+    );
+
+    if (!record) {
+      throw new NotFoundException('Scheduled meal not found');
+    }
+
     const deleted = await this.scheduledMealRepository.softDelete(scheduledMealId, profileId);
 
     if (!deleted) {
       throw new NotFoundException('Scheduled meal not found');
     }
+
+    const entryDate = formatEntryDate(record.entryDate);
+    this.eventEmitter.emit(
+      SCHEDULED_MEAL_DELETED_EVENT,
+      new ScheduledMealDeletedEvent(profileId, scheduledMealId, entryDate),
+    );
+  }
+
+  async countByProfileAndDate(profileId: string, entryDate: string): Promise<number> {
+    return this.scheduledMealRepository.countByProfileAndDate(profileId, entryDate);
   }
 }

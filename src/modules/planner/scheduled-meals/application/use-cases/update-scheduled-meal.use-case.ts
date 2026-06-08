@@ -1,10 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { RecipeAccessService } from '@modules/recipes/application/recipe-access.service';
 import type { ScheduledMealEntity } from '../../domain/entities/scheduled-meal.entity';
 import type { UpdateScheduledMealParams } from '../../domain/interfaces/update-scheduled-meal-params.interface';
-import { parseEntryDate, parsePlannedTime } from '../../domain/utils/scheduled-meal-datetime.util';
+import {
+  formatEntryDate,
+  parseEntryDate,
+  parsePlannedTime,
+} from '../../domain/utils/scheduled-meal-datetime.util';
+import {
+  SCHEDULED_MEAL_UPDATED_EVENT,
+  ScheduledMealUpdatedEvent,
+} from '../../domain/events/scheduled-meal-updated.event';
 import { getMealFlowValidationError } from '../../domain/utils/scheduled-meal-flow.util';
 import { ScheduledMealRecipeRepository } from '../../infrastructure/repositories/scheduled-meal-recipe.repository';
 import { ScheduledMealRepository } from '../../infrastructure/repositories/scheduled-meal.repository';
@@ -20,6 +29,7 @@ export class UpdateScheduledMealUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly plannerStatusService: PlannerStatusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -100,6 +110,14 @@ export class UpdateScheduledMealUseCase {
     }
 
     const statuses = await this.plannerStatusService.resolveStatusesForMeal(profileId, record);
+
+    const entryDate = formatEntryDate(record.entryDate);
+    const previousEntryDate = params.entryDate ? formatEntryDate(existing.entryDate) : undefined;
+
+    this.eventEmitter.emit(
+      SCHEDULED_MEAL_UPDATED_EVENT,
+      new ScheduledMealUpdatedEvent(profileId, scheduledMealId, entryDate, previousEntryDate),
+    );
 
     return toScheduledMealEntity(
       record,

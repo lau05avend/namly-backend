@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { formatFloatingLocalEntryDate } from '@modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import type { MealLogDetailEntity } from '../domain/entities/meal-log-detail.entity';
 import type { MealLogHistoryItemEntity } from '../domain/entities/meal-log-history-item.entity';
@@ -6,6 +8,10 @@ import type { CreateMealLogParams } from '../domain/interfaces/create-meal-log-p
 import type { UpdateMealLogParams } from '../domain/interfaces/update-meal-log-params.interface';
 import { MealLogRepository } from '../infrastructure/repositories/meal-log.repository';
 import { toMealLogDetailEntity, toMealLogHistoryItemEntity } from './meal-log-entity.mapper';
+import {
+  MEAL_LOG_DELETED_EVENT,
+  MealLogDeletedEvent,
+} from '../domain/events/meal-log-deleted.event';
 import { CreateMealLogUseCase } from './use-cases/create-meal-log.use-case';
 import { UpdateMealLogUseCase } from './use-cases/update-meal-log.use-case';
 
@@ -16,6 +22,7 @@ export class MealLogsService {
     private readonly mealLogRepository: MealLogRepository,
     private readonly createMealLogUseCase: CreateMealLogUseCase,
     private readonly updateMealLogUseCase: UpdateMealLogUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   create(profileId: string, params: CreateMealLogParams): Promise<MealLogDetailEntity> {
@@ -56,6 +63,12 @@ export class MealLogsService {
   }
 
   async delete(mealLogId: string, profileId: string): Promise<void> {
+    const loggedAt = await this.mealLogRepository.findLoggedAtForProfile(mealLogId, profileId);
+
+    if (!loggedAt) {
+      throw new NotFoundException('Meal log not found');
+    }
+
     const deleted = await this.prisma.$transaction(async (tx) => {
       const owned = await this.mealLogRepository.isOwnedByProfileInTransaction(
         tx,
@@ -73,6 +86,12 @@ export class MealLogsService {
     if (!deleted) {
       throw new NotFoundException('Meal log not found');
     }
+
+    const entryDate = formatFloatingLocalEntryDate(loggedAt); // TODO: Estandarizar si ese parseo se hace aca o en el event
+    this.eventEmitter.emit(
+      MEAL_LOG_DELETED_EVENT,
+      new MealLogDeletedEvent(profileId, mealLogId, entryDate),
+    );
   }
 
   async getCalendarDays(
@@ -85,5 +104,9 @@ export class MealLogsService {
     }
 
     return this.mealLogRepository.findDistinctLoggedDatesForMonth(profileId, year, month);
+  }
+
+  async countByProfileAndEntryDate(profileId: string, entryDate: string): Promise<number> {
+    return this.mealLogRepository.countByProfileAndEntryDate(profileId, entryDate);
   }
 }
