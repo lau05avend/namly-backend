@@ -10,15 +10,16 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AuthIdentity {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId  String    @map("profile_id") @db.Uuid
-  provider   String
-  externalId String    @map("external_id")
-  email      String?
-  lastSignIn DateTime? @map("last_sign_in") @db.Timestamptz(6)
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId    String    @map("profile_id") @db.Uuid
+  provider     String
+  externalId   String    @unique @map("external_id")
+  email        String?
+  lastSignIn   DateTime? @map("last_sign_in") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  authUserId   String    @unique @map("auth_user_id")
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("auth_identities")
 }
@@ -432,15 +433,15 @@ model UserRecipeInteraction {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UserStreak {
-  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId                 String    @map("profile_id") @db.Uuid
-  currentStreak             Int       @default(0) @map("current_streak")
-  longestStreak             Int       @default(0) @map("longest_streak")
-  lastActiveDate            DateTime? @map("last_active_date") @db.Date
-  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                 DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  currentStreakStartDate    DateTime? @map("current_streak_start_date") @db.Date
-  profile                   Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId              String    @map("profile_id") @db.Uuid
+  currentStreak          Int       @default(0) @map("current_streak")
+  longestStreak          Int       @default(0) @map("longest_streak")
+  lastActiveDate         DateTime? @map("last_active_date") @db.Date
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  currentStreakStartDate DateTime? @map("current_streak_start_date") @db.Date
+  profile                Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([currentStreakStartDate], map: "idx_user_streaks_current_streak_start_date")
   @@map("user_streaks")

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@/generated/prisma/client';
 import type { ProfileEntity } from '../domain/entities/profile.entity';
 import type { UpdateProfileParams } from '../domain/interfaces/update-profile-params.interface';
 import { ProfileRepository } from '../infrastructure/repositories/profile.repository';
@@ -6,6 +7,17 @@ import { ProfileRepository } from '../infrastructure/repositories/profile.reposi
 @Injectable()
 export class ProfilesService {
   constructor(private readonly profileRepository: ProfileRepository) {}
+
+  async createInitialProfile(
+    tx: Prisma.TransactionClient,
+    data: { displayName: string | null; avatarUrl: string | null; profileId: string },
+  ): Promise<ProfileEntity> {
+    return this.profileRepository.createRecord(tx, {
+      displayName: data.displayName,
+      avatarUrl: data.avatarUrl,
+      profileId: data.profileId,
+    });
+  }
 
   async getProfile(profileId: string): Promise<ProfileEntity> {
     const profile = await this.profileRepository.findById(profileId);
