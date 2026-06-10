@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@/generated/prisma/client';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import type { ProfileEntity } from '../../domain/entities/profile.entity';
 import type { UpdateProfileParams } from '../../domain/interfaces/update-profile-params.interface';
@@ -18,6 +19,22 @@ type ProfileRecord = {
 @Injectable()
 export class ProfileRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async createRecord(
+    tx: Prisma.TransactionClient,
+    data: { displayName: string | null; avatarUrl: string | null; profileId: string },
+  ): Promise<ProfileEntity> {
+    const record = await tx.profile.create({
+      data: {
+        id: data.profileId,
+        displayName: data.displayName,
+        avatarUrl: data.avatarUrl,
+      },
+      select: profileSelect,
+    });
+
+    return this.toEntity(record);
+  }
 
   async findById(profileId: string): Promise<ProfileEntity | null> {
     const record = await this.prisma.profile.findUnique({
