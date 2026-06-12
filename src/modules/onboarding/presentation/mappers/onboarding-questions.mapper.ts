@@ -18,6 +18,8 @@ export class OnboardingQuestionsMapper {
     dto.allowMultiple = question.allowMultiple;
     dto.maxSelections = question.maxSelections;
     dto.sortOrder = question.sortOrder;
+    dto.questionIconName = question.questionIconName;
+    dto.optionsLayout = question.optionsLayout;
     dto.options = question.options.map((option) => this.toOptionDto(option));
 
     return dto;

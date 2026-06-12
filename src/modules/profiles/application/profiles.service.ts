@@ -8,6 +8,24 @@ import { ProfileRepository } from '../infrastructure/repositories/profile.reposi
 export class ProfilesService {
   constructor(private readonly profileRepository: ProfileRepository) {}
 
+  async getOnboardingStatus(
+    profileId: string,
+  ): Promise<{ hasCompletedOnboarding: boolean } | null> {
+    return this.profileRepository.findOnboardingStatus(profileId);
+  }
+
+  async updateOnboardingCompletionStatus(
+    tx: Prisma.TransactionClient,
+    profileId: string,
+    hasCompletedOnboarding: boolean,
+  ): Promise<void> {
+    await this.profileRepository.updateOnboardingCompletionStatus(
+      tx,
+      profileId,
+      hasCompletedOnboarding,
+    );
+  }
+
   async createInitialProfile(
     tx: Prisma.TransactionClient,
     data: { displayName: string | null; avatarUrl: string | null; profileId: string },

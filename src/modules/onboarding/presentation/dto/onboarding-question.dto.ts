@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -9,6 +10,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import {
+  ONBOARDING_OPTIONS_LAYOUT,
+  type OnboardingOptionsLayout,
+} from '../../domain/constants/onboarding-options-layout.constants';
 import { OnboardingOptionDto } from './onboarding-option.dto';
 
 export class OnboardingQuestionDto {
@@ -35,6 +40,12 @@ export class OnboardingQuestionDto {
   @IsInt()
   @Min(0)
   sortOrder!: number;
+
+  @IsString()
+  questionIconName!: string;
+
+  @IsEnum(ONBOARDING_OPTIONS_LAYOUT)
+  optionsLayout!: OnboardingOptionsLayout;
 
   @IsArray()
   @ValidateNested({ each: true })
