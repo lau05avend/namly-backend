@@ -37,8 +37,9 @@ export class RecipeRepository {
     filter: RecipeListFilter,
     tagIds?: readonly string[],
     folderId?: string,
+    title?: string,
   ): Promise<RecipeListItemEntity[]> {
-    const where = this.buildListWhere(profileId, filter, tagIds, folderId);
+    const where = this.buildListWhere(profileId, filter, tagIds, folderId, title);
 
     const records = await this.prisma.recipe.findMany({
       where,
@@ -47,6 +48,9 @@ export class RecipeRepository {
         id: true,
         title: true,
         coverUrl: true,
+        profileId: true,
+        isSuggested: true,
+        isPublic: true,
         updatedAt: true,
         createdAt: true,
         userRecipeInteractions: {
@@ -58,7 +62,7 @@ export class RecipeRepository {
       },
     });
 
-    return records.map((record) => this.toListItem(record));
+    return records.map((record) => this.toListItem(record, profileId));
   }
 
   async findDetailById(recipeId: string, profileId: string): Promise<RecipeDetailEntity | null> {
@@ -178,6 +182,7 @@ export class RecipeRepository {
     filter: RecipeListFilter,
     tagIds?: readonly string[],
     folderId?: string,
+    title?: string,
   ): Prisma.RecipeWhereInput {
     let filterWhere: Prisma.RecipeWhereInput;
 
@@ -227,6 +232,15 @@ export class RecipeRepository {
           tagLinks: { some: { tagId } },
         })),
       );
+    }
+
+    if (title) {
+      conditions.push({
+        title: {
+          contains: title,
+          mode: 'insensitive',
+        },
+      });
     }
 
     if (conditions.length === 1) {
@@ -288,18 +302,24 @@ export class RecipeRepository {
     };
   }
 
-  private toListItem(record: {
-    id: string;
-    title: string;
-    coverUrl: string | null;
-    updatedAt: Date;
-    createdAt: Date;
-    userRecipeInteractions: Array<{
-      rating: number | null;
-      isFavorite: boolean;
-      isHidden: boolean;
-    }>;
-  }): RecipeListItemEntity {
+  private toListItem(
+    record: {
+      id: string;
+      title: string;
+      coverUrl: string | null;
+      profileId: string | null;
+      isSuggested: boolean;
+      isPublic: boolean;
+      updatedAt: Date;
+      createdAt: Date;
+      userRecipeInteractions: Array<{
+        rating: number | null;
+        isFavorite: boolean;
+        isHidden: boolean;
+      }>;
+    },
+    viewerProfileId: string,
+  ): RecipeListItemEntity {
     const interaction = record.userRecipeInteractions[0];
 
     return {
@@ -309,6 +329,8 @@ export class RecipeRepository {
       rating: interaction?.rating ?? null,
       isFavorite: interaction?.isFavorite ?? false,
       isHidden: interaction?.isHidden ?? false,
+      isSuggested: record.isSuggested,
+      isPublic: record.isPublic && record.profileId !== viewerProfileId,
       updatedAt: record.updatedAt,
       createdAt: record.createdAt,
     };

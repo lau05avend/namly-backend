@@ -5,6 +5,8 @@ export interface RecipeListItemEntity {
   readonly rating: number | null;
   readonly isFavorite: boolean;
   readonly isHidden: boolean;
+  readonly isSuggested: boolean;
+  readonly isPublic: boolean;
   readonly updatedAt: Date;
   readonly createdAt: Date;
 }

@@ -19,6 +19,8 @@ export class RecipeMapper {
     dto.rating = entity.rating;
     dto.isFavorite = entity.isFavorite;
     dto.isHidden = entity.isHidden;
+    dto.isSuggested = entity.isSuggested;
+    dto.isPublic = entity.isPublic;
     dto.updatedAt = entity.updatedAt;
     dto.createdAt = entity.createdAt;
     return dto;
