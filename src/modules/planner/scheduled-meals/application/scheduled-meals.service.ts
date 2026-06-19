@@ -161,6 +161,7 @@ export class ScheduledMealsService {
           ? []
           : this.scheduledMealRepository.toRecipeEntities(record.scheduledMealRecipes),
       isExpress: record.isExpress,
+      expressNote: record.isExpress ? record.expressNote : null,
     }));
   }
 

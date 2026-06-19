@@ -7,4 +7,5 @@ export interface ScheduledMealSuggestionEntity {
   readonly mealType: ScheduledMealMealTypeEntity;
   readonly recipes: readonly ScheduledMealRecipeEntity[];
   readonly isExpress: boolean;
+  readonly expressNote: string | null;
 }
