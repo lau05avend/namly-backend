@@ -15,7 +15,10 @@ import {
   parseMonthParam,
   toPlannedInstant,
 } from '../domain/utils/scheduled-meal-datetime.util';
-import { ScheduledMealRepository } from '../infrastructure/repositories/scheduled-meal.repository';
+import {
+  ScheduledMealRepository,
+  type ScheduledMealRecord,
+} from '../infrastructure/repositories/scheduled-meal.repository';
 import { CreateScheduledMealUseCase } from './use-cases/create-scheduled-meal.use-case';
 import { UpdateScheduledMealUseCase } from './use-cases/update-scheduled-meal.use-case';
 import { PlannerStatusService } from './planner-status.service';
@@ -129,15 +132,36 @@ export class ScheduledMealsService {
   async getSuggestionsForMealLog(
     profileId: string,
     loggedAt: Date,
+    scheduledMealId?: string,
   ): Promise<ScheduledMealSuggestionEntity[]> {
     const entryDate = formatFloatingLocalEntryDate(loggedAt);
-    const records = await this.scheduledMealRepository.findByProfileAndDate(profileId, entryDate);
+    let records = await this.scheduledMealRepository.findByProfileAndDate(profileId, entryDate);
+
+    if (scheduledMealId) {
+      const pinnedRecord = await this.scheduledMealRepository.findByIdForProfile(
+        scheduledMealId,
+        profileId,
+      );
+
+      if (!pinnedRecord) {
+        throw new NotFoundException('Scheduled meal not found');
+      }
+
+      if (!records.some((record) => record.id === scheduledMealId)) {
+        records = [...records, pinnedRecord];
+      }
+    }
+
     const windowStartMs = loggedAt.getTime() - 2 * 60 * 60 * 1000; // TODO: A futuro sacar la ventana de 2 hrs a una constante
     const windowEndMs = loggedAt.getTime() + 2 * 60 * 60 * 1000;
     const loggedAtMs = loggedAt.getTime();
+    const isPinnedMeal = (recordId: string): boolean =>
+      scheduledMealId !== undefined && recordId === scheduledMealId;
 
     const candidates = records
-      .filter((record) => !this.scheduledMealRepository.hasMealLog(record))
+      .filter(
+        (record) => !this.scheduledMealRepository.hasMealLog(record) || isPinnedMeal(record.id),
+      )
       .map((record) => {
         const plannedInstant = toPlannedInstant(record.entryDate, record.plannedTime);
         const plannedMs = plannedInstant.getTime();
@@ -149,10 +173,17 @@ export class ScheduledMealsService {
           plannedInstant,
         };
       })
-      .filter(({ plannedMs }) => plannedMs >= windowStartMs && plannedMs <= windowEndMs)
+      .filter(
+        ({ record, plannedMs }) =>
+          isPinnedMeal(record.id) || (plannedMs >= windowStartMs && plannedMs <= windowEndMs),
+      )
       .sort((left, right) => left.distanceMs - right.distanceMs);
 
-    return candidates.map(({ record }) => ({
+    return candidates.map(({ record }) => this.toSuggestionEntity(record));
+  }
+
+  private toSuggestionEntity(record: ScheduledMealRecord): ScheduledMealSuggestionEntity {
+    return {
       id: record.id,
       plannedTime: formatPlannedTime(record.plannedTime),
       mealType: record.mealType,
@@ -162,7 +193,7 @@ export class ScheduledMealsService {
           : this.scheduledMealRepository.toRecipeEntities(record.scheduledMealRecipes),
       isExpress: record.isExpress,
       expressNote: record.isExpress ? record.expressNote : null,
-    }));
+    };
   }
 
   async delete(scheduledMealId: string, profileId: string): Promise<void> {
