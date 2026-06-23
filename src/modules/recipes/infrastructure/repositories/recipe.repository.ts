@@ -8,6 +8,7 @@ import type { RecipeListItemEntity } from '../../domain/entities/recipe-list-ite
 import type { RecipeListFilter } from '../../domain/enums/recipe-list-filter.enum';
 import type { CreateRecipeCoreParams } from '../../domain/interfaces/create-recipe-core-params.interface';
 import type { UpdateRecipeCoreParams } from '../../domain/interfaces/update-recipe-core-params.interface';
+import { resolveRecipeMutationPermissions } from '../../domain/rules/resolve-recipe-mutation-permissions.util';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -78,7 +79,7 @@ export class RecipeRepository {
       return null;
     }
 
-    return this.toDetail(record);
+    return this.toDetail(record, profileId);
   }
 
   async findOwnedById(
@@ -253,6 +254,8 @@ export class RecipeRepository {
   private detailSelect(profileId: string) {
     return {
       id: true,
+      profileId: true,
+      isSuggested: true,
       title: true,
       description: true,
       coverUrl: true,
@@ -336,51 +339,57 @@ export class RecipeRepository {
     };
   }
 
-  private toDetail(record: {
-    id: string;
-    title: string;
-    description: string | null;
-    coverUrl: string | null;
-    isPublic: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    ingredients: Array<{
+  private toDetail(
+    record: {
       id: string;
-      name: string;
-      quantity: Prisma.Decimal | null;
-      unitId: string | null;
-      measurementUnit: {
+      profileId: string | null;
+      isSuggested: boolean;
+      title: string;
+      description: string | null;
+      coverUrl: string | null;
+      isPublic: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+      ingredients: Array<{
         id: string;
         name: string;
-        abbreviation: string;
-        category: string;
-        isConvertible: boolean;
-        isDefault: boolean;
-      } | null;
-    }>;
-    steps: Array<{
-      id: string;
-      stepOrder: number;
-      description: string;
-      durationMinutes: number | null;
-    }>;
-    tagLinks: Array<{
-      tag: {
+        quantity: Prisma.Decimal | null;
+        unitId: string | null;
+        measurementUnit: {
+          id: string;
+          name: string;
+          abbreviation: string;
+          category: string;
+          isConvertible: boolean;
+          isDefault: boolean;
+        } | null;
+      }>;
+      steps: Array<{
         id: string;
-        category: string;
-        name: string;
-        iconName: string | null;
-      };
-    }>;
-    userRecipeInteractions: Array<{
-      rating: number | null;
-      publicComment: string | null;
-      privateNotes: string | null;
-      isFavorite: boolean;
-      isHidden: boolean;
-    }>;
-  }): RecipeDetailEntity {
+        stepOrder: number;
+        description: string;
+        durationMinutes: number | null;
+      }>;
+      tagLinks: Array<{
+        tag: {
+          id: string;
+          category: string;
+          name: string;
+          iconName: string | null;
+        };
+      }>;
+      userRecipeInteractions: Array<{
+        rating: number | null;
+        publicComment: string | null;
+        privateNotes: string | null;
+        isFavorite: boolean;
+        isHidden: boolean;
+      }>;
+    },
+    viewerProfileId: string,
+  ): RecipeDetailEntity {
     const interactionRecord = record.userRecipeInteractions[0];
+    const { canEdit, canDelete } = resolveRecipeMutationPermissions(record, viewerProfileId);
 
     return {
       recipe: {
@@ -420,6 +429,8 @@ export class RecipeRepository {
             isHidden: interactionRecord.isHidden,
           }
         : this.defaultInteraction(),
+      canEdit,
+      canDelete,
     };
   }
 
