@@ -27,6 +27,7 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
 import { PlatformSettingsModule } from '@modules/platform-settings/platform-settings.module';
 import { MealTypesModule } from '@modules/meal-types/meal-types.module';
 import { HomeModule } from '@modules/home/home.module';
+import { AnalyticsModule } from '@modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { HomeModule } from '@modules/home/home.module';
     PlatformSettingsModule,
     MealTypesModule,
     HomeModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [],

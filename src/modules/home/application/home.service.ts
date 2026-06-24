@@ -38,9 +38,11 @@ export class HomeService {
       this.homeReadRepository.findRecommendation(profileId),
     ]);
 
-    const pendingMeals = scheduledMeals.filter((meal) => meal.status !== 'completed');
-    const nextMeal = pendingMeals[0] ? mapScheduledMealToHomeEntity(pendingMeals[0]) : null;
-    const upcomingMeals = pendingMeals.slice(1).map((meal) => mapScheduledMealToHomeEntity(meal));
+    const nextMealEntity = scheduledMeals.find((meal) => meal.status === 'next');
+    const nextMeal = nextMealEntity ? mapScheduledMealToHomeEntity(nextMealEntity) : null;
+    const upcomingMeals = scheduledMeals
+      .filter((meal) => meal.status === 'upcoming')
+      .map((meal) => mapScheduledMealToHomeEntity(meal));
 
     return {
       date: entryDate,
