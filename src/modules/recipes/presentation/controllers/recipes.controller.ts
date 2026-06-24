@@ -34,6 +34,7 @@ export class RecipesController {
       query.filter,
       query.tags,
       query.folderId,
+      query.title,
     );
 
     return RecipeMapper.toListItemDtoList(recipes);

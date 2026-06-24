@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsArray, IsIn, IsOptional, IsUUID } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Trim } from '@common/decorators/trim.decorator';
 import {
   RECIPE_LIST_FILTERS,
   type RecipeListFilter,
@@ -29,4 +30,12 @@ export class ListRecipesQueryDto {
   @IsOptional()
   @IsUUID()
   folderId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Trim()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' && value.length === 0 ? undefined : value,
+  )
+  title?: string;
 }

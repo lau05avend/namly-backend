@@ -12,4 +12,6 @@ export default registerAs('app', () => ({
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
 
   databaseUrl: process.env.DATABASE_URL,
+
+  directDatabaseUrl: process.env.DIRECT_URL,
 }));

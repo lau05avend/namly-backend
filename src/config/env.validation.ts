@@ -35,6 +35,9 @@ class EnvironmentVariables {
 
   @IsString()
   DATABASE_URL!: string;
+
+  @IsString()
+  DIRECT_URL!: string;
 }
 
 export function validateEnvironment(config: Record<string, unknown>): EnvironmentVariables {

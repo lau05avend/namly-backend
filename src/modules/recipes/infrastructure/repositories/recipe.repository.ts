@@ -8,6 +8,7 @@ import type { RecipeListItemEntity } from '../../domain/entities/recipe-list-ite
 import type { RecipeListFilter } from '../../domain/enums/recipe-list-filter.enum';
 import type { CreateRecipeCoreParams } from '../../domain/interfaces/create-recipe-core-params.interface';
 import type { UpdateRecipeCoreParams } from '../../domain/interfaces/update-recipe-core-params.interface';
+import { resolveRecipeMutationPermissions } from '../../domain/rules/resolve-recipe-mutation-permissions.util';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -37,8 +38,9 @@ export class RecipeRepository {
     filter: RecipeListFilter,
     tagIds?: readonly string[],
     folderId?: string,
+    title?: string,
   ): Promise<RecipeListItemEntity[]> {
-    const where = this.buildListWhere(profileId, filter, tagIds, folderId);
+    const where = this.buildListWhere(profileId, filter, tagIds, folderId, title);
 
     const records = await this.prisma.recipe.findMany({
       where,
@@ -47,6 +49,9 @@ export class RecipeRepository {
         id: true,
         title: true,
         coverUrl: true,
+        profileId: true,
+        isSuggested: true,
+        isPublic: true,
         updatedAt: true,
         createdAt: true,
         userRecipeInteractions: {
@@ -58,7 +63,7 @@ export class RecipeRepository {
       },
     });
 
-    return records.map((record) => this.toListItem(record));
+    return records.map((record) => this.toListItem(record, profileId));
   }
 
   async findDetailById(recipeId: string, profileId: string): Promise<RecipeDetailEntity | null> {
@@ -74,7 +79,7 @@ export class RecipeRepository {
       return null;
     }
 
-    return this.toDetail(record);
+    return this.toDetail(record, profileId);
   }
 
   async findOwnedById(
@@ -178,6 +183,7 @@ export class RecipeRepository {
     filter: RecipeListFilter,
     tagIds?: readonly string[],
     folderId?: string,
+    title?: string,
   ): Prisma.RecipeWhereInput {
     let filterWhere: Prisma.RecipeWhereInput;
 
@@ -229,6 +235,15 @@ export class RecipeRepository {
       );
     }
 
+    if (title) {
+      conditions.push({
+        title: {
+          contains: title,
+          mode: 'insensitive',
+        },
+      });
+    }
+
     if (conditions.length === 1) {
       return filterWhere;
     }
@@ -239,6 +254,8 @@ export class RecipeRepository {
   private detailSelect(profileId: string) {
     return {
       id: true,
+      profileId: true,
+      isSuggested: true,
       title: true,
       description: true,
       coverUrl: true,
@@ -288,18 +305,24 @@ export class RecipeRepository {
     };
   }
 
-  private toListItem(record: {
-    id: string;
-    title: string;
-    coverUrl: string | null;
-    updatedAt: Date;
-    createdAt: Date;
-    userRecipeInteractions: Array<{
-      rating: number | null;
-      isFavorite: boolean;
-      isHidden: boolean;
-    }>;
-  }): RecipeListItemEntity {
+  private toListItem(
+    record: {
+      id: string;
+      title: string;
+      coverUrl: string | null;
+      profileId: string | null;
+      isSuggested: boolean;
+      isPublic: boolean;
+      updatedAt: Date;
+      createdAt: Date;
+      userRecipeInteractions: Array<{
+        rating: number | null;
+        isFavorite: boolean;
+        isHidden: boolean;
+      }>;
+    },
+    viewerProfileId: string,
+  ): RecipeListItemEntity {
     const interaction = record.userRecipeInteractions[0];
 
     return {
@@ -309,56 +332,64 @@ export class RecipeRepository {
       rating: interaction?.rating ?? null,
       isFavorite: interaction?.isFavorite ?? false,
       isHidden: interaction?.isHidden ?? false,
+      isSuggested: record.isSuggested,
+      isPublic: record.isPublic && record.profileId !== viewerProfileId,
       updatedAt: record.updatedAt,
       createdAt: record.createdAt,
     };
   }
 
-  private toDetail(record: {
-    id: string;
-    title: string;
-    description: string | null;
-    coverUrl: string | null;
-    isPublic: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    ingredients: Array<{
+  private toDetail(
+    record: {
       id: string;
-      name: string;
-      quantity: Prisma.Decimal | null;
-      unitId: string | null;
-      measurementUnit: {
+      profileId: string | null;
+      isSuggested: boolean;
+      title: string;
+      description: string | null;
+      coverUrl: string | null;
+      isPublic: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+      ingredients: Array<{
         id: string;
         name: string;
-        abbreviation: string;
-        category: string;
-        isConvertible: boolean;
-        isDefault: boolean;
-      } | null;
-    }>;
-    steps: Array<{
-      id: string;
-      stepOrder: number;
-      description: string;
-      durationMinutes: number | null;
-    }>;
-    tagLinks: Array<{
-      tag: {
+        quantity: Prisma.Decimal | null;
+        unitId: string | null;
+        measurementUnit: {
+          id: string;
+          name: string;
+          abbreviation: string;
+          category: string;
+          isConvertible: boolean;
+          isDefault: boolean;
+        } | null;
+      }>;
+      steps: Array<{
         id: string;
-        category: string;
-        name: string;
-        iconName: string | null;
-      };
-    }>;
-    userRecipeInteractions: Array<{
-      rating: number | null;
-      publicComment: string | null;
-      privateNotes: string | null;
-      isFavorite: boolean;
-      isHidden: boolean;
-    }>;
-  }): RecipeDetailEntity {
+        stepOrder: number;
+        description: string;
+        durationMinutes: number | null;
+      }>;
+      tagLinks: Array<{
+        tag: {
+          id: string;
+          category: string;
+          name: string;
+          iconName: string | null;
+        };
+      }>;
+      userRecipeInteractions: Array<{
+        rating: number | null;
+        publicComment: string | null;
+        privateNotes: string | null;
+        isFavorite: boolean;
+        isHidden: boolean;
+      }>;
+    },
+    viewerProfileId: string,
+  ): RecipeDetailEntity {
     const interactionRecord = record.userRecipeInteractions[0];
+    const { canEdit, canDelete } = resolveRecipeMutationPermissions(record, viewerProfileId);
 
     return {
       recipe: {
@@ -398,6 +429,8 @@ export class RecipeRepository {
             isHidden: interactionRecord.isHidden,
           }
         : this.defaultInteraction(),
+      canEdit,
+      canDelete,
     };
   }
 

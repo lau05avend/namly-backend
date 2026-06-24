@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, ValidateNested } from 'class-validator';
 import { RecipeIngredientDto } from './recipe-ingredient.dto';
 import { RecipeInteractionDto } from './recipe-interaction.dto';
 import { RecipeStepDto } from './recipe-step.dto';
@@ -29,4 +29,10 @@ export class RecipeDetailDto {
   @ValidateNested()
   @Type(() => RecipeInteractionDto)
   interaction!: RecipeInteractionDto;
+
+  @IsBoolean()
+  canEdit!: boolean;
+
+  @IsBoolean()
+  canDelete!: boolean;
 }

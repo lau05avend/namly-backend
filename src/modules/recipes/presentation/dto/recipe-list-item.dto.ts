@@ -20,6 +20,12 @@ export class RecipeListItemDto {
   @IsBoolean()
   isHidden!: boolean;
 
+  @IsBoolean()
+  isSuggested!: boolean;
+
+  @IsBoolean()
+  isPublic!: boolean;
+
   @IsDate()
   updatedAt!: Date;
 

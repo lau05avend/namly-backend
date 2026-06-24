@@ -19,6 +19,8 @@ export class RecipeMapper {
     dto.rating = entity.rating;
     dto.isFavorite = entity.isFavorite;
     dto.isHidden = entity.isHidden;
+    dto.isSuggested = entity.isSuggested;
+    dto.isPublic = entity.isPublic;
     dto.updatedAt = entity.updatedAt;
     dto.createdAt = entity.createdAt;
     return dto;
@@ -35,6 +37,8 @@ export class RecipeMapper {
     dto.steps = entity.steps.map((step) => this.toStepDto(step));
     dto.tags = entity.tags.map((tag) => this.toTagDto(tag));
     dto.interaction = this.toInteractionDto(entity.interaction);
+    dto.canEdit = entity.canEdit;
+    dto.canDelete = entity.canDelete;
     return dto;
   }
 

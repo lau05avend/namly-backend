@@ -36,6 +36,7 @@ export class ScheduledMealsController {
     const suggestions = await this.scheduledMealsService.getSuggestionsForMealLog(
       profileId,
       query.loggedAt,
+      query.scheduledMealId,
     );
 
     return ScheduledMealSuggestionMapper.toDtoList(suggestions);

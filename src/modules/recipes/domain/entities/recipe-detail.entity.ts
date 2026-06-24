@@ -10,4 +10,6 @@ export interface RecipeDetailEntity {
   readonly steps: readonly RecipeStepEntity[];
   readonly tags: readonly RecipeTagEntity[];
   readonly interaction: RecipeInteractionEntity;
+  readonly canEdit: boolean;
+  readonly canDelete: boolean;
 }

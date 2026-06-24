@@ -60,38 +60,37 @@ export class TagRepository {
   }
 
   async ensureUserTagsInitializedForCategory(profileId: string, category: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const existingCount = await tx.tag.count({
-        where: userTagWhere(profileId, category),
-      });
+    const existingTag = await this.prisma.tag.findFirst({
+      where: userTagWhere(profileId, category),
+      select: { id: true },
+    });
 
-      if (existingCount > 0) {
-        return;
-      }
+    if (existingTag) {
+      return;
+    }
 
-      const systemTags = await tx.tag.findMany({
-        where: systemTagWhere(category),
-        orderBy: { name: 'asc' },
-        select: {
-          category: true,
-          name: true,
-          iconName: true,
-        },
-      });
+    const systemTags = await this.prisma.tag.findMany({
+      where: systemTagWhere(category),
+      orderBy: { name: 'asc' },
+      select: {
+        category: true,
+        name: true,
+        iconName: true,
+      },
+    });
 
-      if (systemTags.length === 0) {
-        return;
-      }
+    if (systemTags.length === 0) {
+      return;
+    }
 
-      await tx.tag.createMany({
-        data: systemTags.map((systemTag) => ({
-          profileId,
-          category: systemTag.category,
-          name: systemTag.name,
-          iconName: systemTag.iconName,
-          isSystemDefined: false,
-        })),
-      });
+    await this.prisma.tag.createMany({
+      data: systemTags.map((systemTag) => ({
+        profileId,
+        category: systemTag.category,
+        name: systemTag.name,
+        iconName: systemTag.iconName,
+        isSystemDefined: false,
+      })),
     });
   }
 

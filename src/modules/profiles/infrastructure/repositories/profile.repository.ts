@@ -36,6 +36,37 @@ export class ProfileRepository {
     return this.toEntity(record);
   }
 
+  async findOnboardingStatus(
+    profileId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ hasCompletedOnboarding: boolean } | null> {
+    const client = tx ?? this.prisma;
+    const record = await client.profile.findUnique({
+      where: { id: profileId },
+      select: { hasCompletedOnboarding: true },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return { hasCompletedOnboarding: record.hasCompletedOnboarding ?? false };
+  }
+
+  async updateOnboardingCompletionStatus(
+    tx: Prisma.TransactionClient,
+    profileId: string,
+    hasCompletedOnboarding: boolean,
+  ): Promise<void> {
+    await tx.profile.update({
+      where: { id: profileId },
+      data: {
+        hasCompletedOnboarding,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   async findById(profileId: string): Promise<ProfileEntity | null> {
     const record = await this.prisma.profile.findUnique({
       where: { id: profileId },

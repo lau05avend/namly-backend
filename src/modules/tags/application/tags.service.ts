@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { TagEntity } from '../domain/entities/tag.entity';
@@ -11,6 +12,9 @@ import { TagRepository } from '../infrastructure/repositories/tag.repository';
 
 @Injectable()
 export class TagsService {
+  private readonly logger = new Logger(TagsService.name);
+  private readonly userTagInitPromises = new Map<string, Promise<void>>();
+
   constructor(private readonly tagRepository: TagRepository) {}
 
   getSystemTagsByCategory(category: string): Promise<TagEntity[]> {
@@ -18,9 +22,34 @@ export class TagsService {
   }
 
   async getUserTagsByCategory(profileId: string, category: string): Promise<TagEntity[]> {
-    await this.tagRepository.ensureUserTagsInitializedForCategory(profileId, category);
+    const tags = await this.tagRepository.findUserTagsByCategory(profileId, category);
 
-    return this.tagRepository.findUserTagsByCategory(profileId, category);
+    if (tags.length === 0) {
+      this.scheduleUserTagsInitialization(profileId, category);
+    }
+
+    return tags;
+  }
+
+  private scheduleUserTagsInitialization(profileId: string, category: string): void {
+    const key = `${profileId}:${category}`;
+    const inFlight = this.userTagInitPromises.get(key);
+
+    if (inFlight) {
+      return;
+    }
+
+    const initPromise = this.tagRepository
+      .ensureUserTagsInitializedForCategory(profileId, category)
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : 'unknown error';
+        this.logger.warn(`User tag seed skipped for ${key}: ${message}`);
+      })
+      .finally(() => {
+        this.userTagInitPromises.delete(key);
+      });
+
+    this.userTagInitPromises.set(key, initPromise);
   }
 
   async createUserTags(

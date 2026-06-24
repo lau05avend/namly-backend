@@ -10,16 +10,16 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AuthIdentity {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profileId    String    @map("profile_id") @db.Uuid
-  provider     String
-  externalId   String    @unique @map("external_id")
-  email        String?
-  lastSignIn   DateTime? @map("last_sign_in") @db.Timestamptz(6)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  authUserId   String    @unique @map("auth_user_id")
-  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId  String    @map("profile_id") @db.Uuid
+  provider   String
+  externalId String    @unique @map("external_id")
+  email      String?
+  lastSignIn DateTime? @map("last_sign_in") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  authUserId String    @unique @map("auth_user_id")
+  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("auth_identities")
 }
@@ -163,6 +163,8 @@ model OnboardingQuestion {
   maxSelections           Int?                     @map("max_selections")
   createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  questionIconName        String                   @default("circle") @map("question_icon_name")
+  optionsLayout           OnboardingOptionsLayout  @default(chips) @map("options_layout")
   options                 OnboardingOption[]
   userOnboardingResponses UserOnboardingResponse[]
 
@@ -176,6 +178,7 @@ model Profile {
   avatarUrl               String?                  @map("avatar_url")
   createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  hasCompletedOnboarding  Boolean                  @default(false) @map("has_completed_onboarding")
   authIdentities          AuthIdentity[]
   guestSessions           GuestSession[]
   mealLogs                MealLog[]
@@ -272,6 +275,7 @@ model Recipe {
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  isHomeRecommendation Boolean                   @default(false) @map("is_home_recommendation")
   meal_log_recipes       meal_log_recipes[]
   folderItems            RecipeFolderItem[]
   ingredients            RecipeIngredient[]
@@ -460,4 +464,11 @@ model meal_log_recipes { /// TODO: pasar esto a camelCase
   @@unique([meal_log_id, recipe_id], map: "uq_meal_log_recipe_unique")
   @@index([meal_log_id], map: "idx_meal_log_recipes_meal_log")
   @@index([recipe_id], map: "idx_meal_log_recipes_recipe")
+}
+
+enum OnboardingOptionsLayout {
+  chips
+  list
+
+  @@map("onboarding_options_layout")
 }

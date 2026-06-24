@@ -25,12 +25,13 @@ export class RecipesService {
     filter: RecipeListFilter,
     tagIds?: readonly string[],
     folderId?: string,
+    title?: string,
   ): Promise<RecipeListItemEntity[]> {
     if (folderId !== undefined) {
       await this.recipeFoldersService.assertFolderOwned(folderId, profileId);
     }
 
-    return this.recipeRepository.findList(profileId, filter, tagIds, folderId);
+    return this.recipeRepository.findList(profileId, filter, tagIds, folderId, title);
   }
 
   async getRecipeById(recipeId: string, profileId: string): Promise<RecipeDetailEntity> {
