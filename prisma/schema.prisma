@@ -153,18 +153,18 @@ model OnboardingOption {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model OnboardingQuestion {
-  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  questionText            String                    @map("question_text")
-  inputType               String                    @map("input_type")
-  allowCustomInput        Boolean                   @default(false) @map("allow_custom_input")
-  isActive                Boolean                   @default(true) @map("is_active")
-  sortOrder               Int                       @map("sort_order")
-  allowMultiple           Boolean                   @default(false) @map("allow_multiple")
-  maxSelections           Int?                      @map("max_selections")
-  createdAt               DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt               DateTime                  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  questionIconName        String                    @default("circle") @map("question_icon_name")
-  optionsLayout           OnboardingOptionsLayout @default(chips) @map("options_layout")
+  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionText            String                   @map("question_text")
+  inputType               String                   @map("input_type")
+  allowCustomInput        Boolean                  @default(false) @map("allow_custom_input")
+  isActive                Boolean                  @default(true) @map("is_active")
+  sortOrder               Int                      @map("sort_order")
+  allowMultiple           Boolean                  @default(false) @map("allow_multiple")
+  maxSelections           Int?                     @map("max_selections")
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  questionIconName        String                   @default("circle") @map("question_icon_name")
+  optionsLayout           OnboardingOptionsLayout  @default(chips) @map("options_layout")
   options                 OnboardingOption[]
   userOnboardingResponses UserOnboardingResponse[]
 
@@ -275,6 +275,7 @@ model Recipe {
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  isHomeRecommendation Boolean                   @default(false) @map("is_home_recommendation")
   meal_log_recipes       meal_log_recipes[]
   folderItems            RecipeFolderItem[]
   ingredients            RecipeIngredient[]

@@ -26,6 +26,7 @@ import { StreaksModule } from '@modules/streaks/streaks.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { PlatformSettingsModule } from '@modules/platform-settings/platform-settings.module';
 import { MealTypesModule } from '@modules/meal-types/meal-types.module';
+import { HomeModule } from '@modules/home/home.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { MealTypesModule } from '@modules/meal-types/meal-types.module';
     NotificationsModule,
     PlatformSettingsModule,
     MealTypesModule,
+    HomeModule,
   ],
   controllers: [],
   providers: [],
