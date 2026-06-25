@@ -21,6 +21,31 @@ const mealLogExistsSelect = {
   select: { id: true },
 } as const;
 
+const mealLogTagSelect = {
+  id: true,
+  category: true,
+  name: true,
+  iconName: true,
+} as const;
+
+const mealLogCompletionSelect = {
+  where: { ...notDeleted },
+  orderBy: { loggedAt: 'desc' as const },
+  take: 1,
+  select: {
+    id: true,
+    mediaUrl: true,
+    loggedAt: true,
+    content: true,
+    tagLinks: {
+      where: { tag: { deletedAt: null } },
+      select: {
+        tag: { select: mealLogTagSelect },
+      },
+    },
+  },
+} as const;
+
 const recipeSelect = {
   orderBy: { sortOrder: 'asc' as const },
   select: {
@@ -57,6 +82,25 @@ export type ScheduledMealRecord = {
   mealLogs: Array<{ id: string }>;
 };
 
+export type ScheduledMealCompletionRecord = {
+  id: string;
+  mediaUrl: string | null;
+  loggedAt: Date;
+  content: string | null;
+  tagLinks: Array<{
+    tag: {
+      id: string;
+      category: string;
+      name: string;
+      iconName: string | null;
+    };
+  }>;
+};
+
+export type ScheduledMealDetailRecord = Omit<ScheduledMealRecord, 'mealLogs'> & {
+  mealLogs: ScheduledMealCompletionRecord[];
+};
+
 @Injectable()
 export class ScheduledMealRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -73,6 +117,26 @@ export class ScheduledMealRepository {
     });
 
     return records.map((record) => this.toRecord(record));
+  }
+
+  async findDetailByIdForProfile(
+    scheduledMealId: string,
+    profileId: string,
+  ): Promise<ScheduledMealDetailRecord | null> {
+    const record = await this.prisma.scheduledMeal.findFirst({
+      where: {
+        id: scheduledMealId,
+        profileId,
+        ...notDeleted,
+      },
+      select: this.recordDetailSelect(),
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return this.toDetailRecord(record);
   }
 
   async findByIdForProfile(
@@ -241,6 +305,20 @@ export class ScheduledMealRepository {
     };
   }
 
+  private recordDetailSelect() {
+    return {
+      id: true,
+      mealTypeId: true,
+      entryDate: true,
+      plannedTime: true,
+      isExpress: true,
+      expressNote: true,
+      mealType: { select: mealTypeSelect },
+      scheduledMealRecipes: recipeSelect,
+      mealLogs: mealLogCompletionSelect,
+    };
+  }
+
   private toRecord(record: {
     id: string;
     mealTypeId: string;
@@ -252,6 +330,30 @@ export class ScheduledMealRepository {
     scheduledMealRecipes: ScheduledMealRecord['scheduledMealRecipes'];
     mealLogs: Array<{ id: string }>;
   }): ScheduledMealRecord {
+    return {
+      id: record.id,
+      mealTypeId: record.mealTypeId,
+      entryDate: record.entryDate,
+      plannedTime: record.plannedTime,
+      isExpress: record.isExpress,
+      expressNote: record.expressNote,
+      mealType: record.mealType,
+      scheduledMealRecipes: record.scheduledMealRecipes,
+      mealLogs: record.mealLogs,
+    };
+  }
+
+  private toDetailRecord(record: {
+    id: string;
+    mealTypeId: string;
+    entryDate: Date;
+    plannedTime: Date;
+    isExpress: boolean;
+    expressNote: string | null;
+    mealType: ScheduledMealMealTypeEntity;
+    scheduledMealRecipes: ScheduledMealRecord['scheduledMealRecipes'];
+    mealLogs: ScheduledMealCompletionRecord[];
+  }): ScheduledMealDetailRecord {
     return {
       id: record.id,
       mealTypeId: record.mealTypeId,

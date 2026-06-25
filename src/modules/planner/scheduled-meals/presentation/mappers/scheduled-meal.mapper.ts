@@ -1,5 +1,7 @@
 import type { ScheduledMealEntity } from '../../domain/entities/scheduled-meal.entity';
 import { ScheduledMealDto } from '../dto/scheduled-meal.dto';
+import { ScheduledMealCompletionMealLogDto } from '../dto/scheduled-meal-completion-meal-log.dto';
+import { ScheduledMealCompletionTagDto } from '../dto/scheduled-meal-completion-tag.dto';
 import { ScheduledMealMealTypeDto } from '../dto/scheduled-meal-meal-type.dto';
 import { ScheduledMealRecipeDto } from '../dto/scheduled-meal-recipe.dto';
 
@@ -22,6 +24,10 @@ export class ScheduledMealMapper {
       dto.expressNote = null;
       dto.recipes = entity.recipes.map((recipe) => this.toRecipeDto(recipe));
     }
+
+    dto.completionMealLog = entity.completionMealLog
+      ? this.toCompletionMealLogDto(entity.completionMealLog)
+      : null;
 
     return dto;
   }
@@ -50,6 +56,33 @@ export class ScheduledMealMapper {
     dto.title = entity.title;
     dto.coverUrl = entity.coverUrl;
     dto.sortOrder = entity.sortOrder;
+
+    return dto;
+  }
+
+  private static toCompletionMealLogDto(
+    entity: NonNullable<ScheduledMealEntity['completionMealLog']>,
+  ): ScheduledMealCompletionMealLogDto {
+    const dto = new ScheduledMealCompletionMealLogDto();
+
+    dto.id = entity.id;
+    dto.mediaUrl = entity.mediaUrl;
+    dto.loggedAt = entity.loggedAt;
+    dto.content = entity.content;
+    dto.tags = entity.tags.map((tag) => this.toCompletionTagDto(tag));
+
+    return dto;
+  }
+
+  private static toCompletionTagDto(
+    entity: NonNullable<ScheduledMealEntity['completionMealLog']>['tags'][number],
+  ): ScheduledMealCompletionTagDto {
+    const dto = new ScheduledMealCompletionTagDto();
+
+    dto.id = entity.id;
+    dto.category = entity.category;
+    dto.name = entity.name;
+    dto.iconName = entity.iconName;
 
     return dto;
   }

@@ -111,7 +111,11 @@ export class ScheduledMealsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener comida planificada por ID' })
+  @ApiOperation({
+    summary: 'Obtener comida planificada por ID',
+    description:
+      'Si la comida está completada, incluye completionMealLog con foto, fecha de registro, contenido y etiquetas.',
+  })
   @ApiUuidParam('id', 'ID de la comida planificada', SwaggerExamples.uuid.scheduledMeal)
   @ApiOkResponse({ type: ScheduledMealDto })
   @ApiStandardMutationResponses()
