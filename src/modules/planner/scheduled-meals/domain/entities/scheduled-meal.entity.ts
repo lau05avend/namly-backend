@@ -1,5 +1,6 @@
 import type { ScheduledMealMealTypeEntity } from './scheduled-meal-meal-type.entity';
 import type { ScheduledMealRecipeEntity } from './scheduled-meal-recipe.entity';
+import type { ScheduledMealCompletionMealLogEntity } from './scheduled-meal-completion-meal-log.entity';
 import type { ScheduledMealStatus } from '../enums/scheduled-meal-status.enum';
 
 export interface ScheduledMealEntity {
@@ -12,4 +13,5 @@ export interface ScheduledMealEntity {
   readonly expressNote: string | null;
   readonly recipes: readonly ScheduledMealRecipeEntity[];
   readonly status: ScheduledMealStatus;
+  readonly completionMealLog: ScheduledMealCompletionMealLogEntity | null;
 }

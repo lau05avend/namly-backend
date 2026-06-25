@@ -1,15 +1,24 @@
 import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
+import { ApiBodyExample } from '@/docs/swagger/decorators/api-body-example.decorator';
+import { ApiProtectedTag } from '@/docs/swagger/decorators/api-protected.decorator';
+import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
+import { SwaggerRequestExamples } from '@/docs/swagger/swagger.examples';
 import { PlatformSettingsService } from '../../application/platform-settings.service';
-import type { PlatformSettingsDto } from '../dto/platform-settings.dto';
+import { PlatformSettingsDto } from '../dto/platform-settings.dto';
 import { UpdatePlatformSettingsDto } from '../dto/update-platform-settings.dto';
 import { PlatformSettingsMapper } from '../mappers/platform-settings.mapper';
-import { CurrentProfileId } from '@/common/decorators/current-profile-id.decorator';
 
+@ApiProtectedTag('Platform Settings')
 @Controller('user')
 export class UserPlatformSettingsController {
   constructor(private readonly platformSettingsService: PlatformSettingsService) {}
 
   @Get('platform-settings')
+  @ApiOperation({ summary: 'Obtener preferencias de plataforma del usuario' })
+  @ApiOkResponse({ type: PlatformSettingsDto })
+  @ApiStandardMutationResponses()
   async getPlatformSettings(@CurrentProfileId() profileId: string): Promise<PlatformSettingsDto> {
     const settings = await this.platformSettingsService.getByUserId(profileId);
 
@@ -17,6 +26,10 @@ export class UserPlatformSettingsController {
   }
 
   @Patch('platform-settings')
+  @ApiBodyExample(UpdatePlatformSettingsDto, SwaggerRequestExamples.updatePlatformSettings)
+  @ApiOperation({ summary: 'Actualizar preferencias de plataforma del usuario' })
+  @ApiOkResponse({ type: PlatformSettingsDto })
+  @ApiStandardMutationResponses()
   async patchPlatformSettings(
     @CurrentProfileId() profileId: string,
     @Body() body: UpdatePlatformSettingsDto,

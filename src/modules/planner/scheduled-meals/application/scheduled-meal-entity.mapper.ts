@@ -3,6 +3,7 @@ import type { ScheduledMealStatus } from '../domain/enums/scheduled-meal-status.
 import type { ScheduledMealStatusInput } from '../domain/interfaces/scheduled-meal-status-input.interface';
 import { formatEntryDate, formatPlannedTime } from '../domain/utils/scheduled-meal-datetime.util';
 import {
+  type ScheduledMealCompletionRecord,
   type ScheduledMealRepository,
   type ScheduledMealRecord,
 } from '../infrastructure/repositories/scheduled-meal.repository';
@@ -23,6 +24,7 @@ export function toScheduledMealEntity(
   record: ScheduledMealRecord,
   status: ScheduledMealStatus,
   repository: ScheduledMealRepository,
+  completionMealLogRecord?: ScheduledMealCompletionRecord | null,
 ): ScheduledMealEntity {
   return {
     id: record.id,
@@ -34,5 +36,22 @@ export function toScheduledMealEntity(
     expressNote: record.isExpress ? record.expressNote : null,
     recipes: record.isExpress ? [] : repository.toRecipeEntities(record.scheduledMealRecipes),
     status,
+    completionMealLog: mapCompletionMealLog(completionMealLogRecord),
+  };
+}
+
+function mapCompletionMealLog(
+  record: ScheduledMealCompletionRecord | null | undefined,
+): ScheduledMealEntity['completionMealLog'] {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    id: record.id,
+    mediaUrl: record.mediaUrl,
+    loggedAt: record.loggedAt,
+    content: record.content,
+    tags: record.tagLinks.map((link) => link.tag),
   };
 }

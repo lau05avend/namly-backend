@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Trim } from '@common/decorators/trim.decorator';
 import {
   Allow,
@@ -7,10 +8,11 @@ import {
   IsUrl,
   MaxLength,
   Validate,
+  ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
+import { SwaggerExamples } from '@/docs/swagger/swagger.examples';
 import type { UpdateProfileParams } from '../../domain/interfaces/update-profile-params.interface';
 
 @ValidatorConstraint({ name: 'atLeastOneProfileField', async: false })
@@ -31,6 +33,10 @@ export class UpdateProfileDto implements UpdateProfileParams {
   @Validate(AtLeastOneProfileFieldConstraint)
   _atLeastOneField?: unknown;
 
+  @ApiPropertyOptional({
+    description: 'Nombre visible del perfil',
+    example: SwaggerExamples.text.displayName,
+  })
   @Trim()
   @IsOptional()
   @IsString()
@@ -38,6 +44,10 @@ export class UpdateProfileDto implements UpdateProfileParams {
   @MaxLength(120)
   displayName?: string;
 
+  @ApiPropertyOptional({
+    description: 'URL del avatar',
+    example: SwaggerExamples.url.recipeCover,
+  })
   @Trim()
   @IsOptional()
   @IsUrl()

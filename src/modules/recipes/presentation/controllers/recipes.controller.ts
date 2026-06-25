@@ -11,7 +11,18 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
+import { ApiProtectedTag } from '@/docs/swagger/decorators/api-protected.decorator';
+import { ApiBodyExample } from '@/docs/swagger/decorators/api-body-example.decorator';
+import { ApiUuidParam } from '@/docs/swagger/decorators/api-uuid-param.decorator';
+import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
+import { SwaggerExamples, SwaggerRequestExamples } from '@/docs/swagger/swagger.examples';
 import { RecipesService } from '../../application/recipes.service';
 import { CreateRecipeDto } from '../dto/create-recipe.dto';
 import { ListRecipesQueryDto } from '../dto/list-recipes-query.dto';
@@ -20,11 +31,15 @@ import { RecipeListItemDto } from '../dto/recipe-list-item.dto';
 import { UpdateRecipeDto } from '../dto/update-recipe.dto';
 import { RecipeMapper } from '../mappers/recipe.mapper';
 
+@ApiProtectedTag('Recipes')
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Listar recetas del usuario con filtros opcionales' })
+  @ApiOkResponse({ type: RecipeListItemDto, isArray: true })
+  @ApiStandardMutationResponses()
   async listRecipes(
     @CurrentProfileId() profileId: string,
     @Query() query: ListRecipesQueryDto,
@@ -41,6 +56,10 @@ export class RecipesController {
   }
 
   @Post()
+  @ApiBodyExample(CreateRecipeDto, SwaggerRequestExamples.createRecipe)
+  @ApiOperation({ summary: 'Crear receta' })
+  @ApiCreatedResponse({ type: RecipeDetailDto })
+  @ApiStandardMutationResponses()
   async createRecipe(
     @CurrentProfileId() profileId: string,
     @Body() body: CreateRecipeDto,
@@ -51,6 +70,10 @@ export class RecipesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener detalle de receta' })
+  @ApiUuidParam('id', 'ID de la receta', SwaggerExamples.uuid.recipe)
+  @ApiOkResponse({ type: RecipeDetailDto })
+  @ApiStandardMutationResponses()
   async getRecipe(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) recipeId: string,
@@ -61,6 +84,10 @@ export class RecipesController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar receta' })
+  @ApiUuidParam('id', 'ID de la receta', SwaggerExamples.uuid.recipe)
+  @ApiOkResponse({ type: RecipeDetailDto })
+  @ApiStandardMutationResponses()
   async updateRecipe(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) recipeId: string,
@@ -73,6 +100,10 @@ export class RecipesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Eliminar receta' })
+  @ApiUuidParam('id', 'ID de la receta', SwaggerExamples.uuid.recipe)
+  @ApiNoContentResponse({ description: 'Receta eliminada' })
+  @ApiStandardMutationResponses()
   async deleteRecipe(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) recipeId: string,

@@ -1,7 +1,15 @@
 import { ArgumentsHost, Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Request, Response } from 'express';
+import { HTTP_REQUEST_LOG_CONTEXT } from '@common/constants/logging.constants';
+import {
+  formatRequestLogLine,
+  getRequestPath,
+  resolveExceptionName,
+  resolveHttpExceptionMessage,
+} from '@common/utils/format-request-log.util';
 import { mapPrismaErrorToHttpException } from '@common/utils/map-prisma-error.util';
+import type { RequestContext } from '@shared/context/request-context.interface';
 
 interface HttpExceptionResponse {
   statusCode?: number;
@@ -22,7 +30,7 @@ interface ErrorResponseBody {
 
 @Catch()
 export class HttpExceptionFilter extends BaseExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  private readonly logger = new Logger(HTTP_REQUEST_LOG_CONTEXT);
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const mappedPrisma = mapPrismaErrorToHttpException(exception);
@@ -31,19 +39,11 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     const status: number =
       resolved instanceof HttpException ? resolved.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const isServerError = status >= 500;
-
-    if (!(resolved instanceof HttpException) || isServerError) {
-      if (exception instanceof Error) {
-        this.logger.error(exception.message, exception.stack);
-      } else {
-        this.logger.error('Unhandled exception', String(exception));
-      }
-    }
-
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<RequestContext>();
+
+    this.logException(request, status, exception, resolved);
 
     const exceptionResponse =
       resolved instanceof HttpException
@@ -70,5 +70,37 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     }
 
     response.status(status).json(body);
+  }
+
+  private logException(
+    request: RequestContext,
+    status: number,
+    exception: unknown,
+    resolved: unknown,
+  ): void {
+    const startedAt = request.requestStartedAt ?? Date.now();
+    const requestLine = formatRequestLogLine({
+      method: request.method,
+      path: getRequestPath(request),
+      statusCode: status,
+      durationMs: Date.now() - startedAt,
+      environment: process.env.NODE_ENV,
+      authUserId: request.authUserId,
+    });
+
+    const isExpectedHttpException = resolved instanceof HttpException && status < 500;
+
+    if (isExpectedHttpException) {
+      const detail = resolveHttpExceptionMessage(resolved);
+      this.logger.warn(`${requestLine}\n${detail}`);
+      return;
+    }
+
+    const exceptionName = resolveExceptionName(exception);
+    this.logger.error(`${requestLine}\n${exceptionName}`);
+
+    if (exception instanceof Error && exception.stack) {
+      this.logger.error(exception.stack);
+    }
   }
 }

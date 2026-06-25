@@ -11,7 +11,18 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
+import { ApiProtectedTag } from '@/docs/swagger/decorators/api-protected.decorator';
+import { ApiBodyExample } from '@/docs/swagger/decorators/api-body-example.decorator';
+import { ApiUuidParam } from '@/docs/swagger/decorators/api-uuid-param.decorator';
+import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
+import { SwaggerExamples, SwaggerRequestExamples } from '@/docs/swagger/swagger.examples';
 import { ScheduledMealsService } from '../../application/scheduled-meals.service';
 import { CalendarScheduledMealsQueryDto } from '../dto/calendar-scheduled-meals-query.dto';
 import { CreateScheduledMealDto } from '../dto/create-scheduled-meal.dto';
@@ -24,11 +35,18 @@ import { ScheduledMealSuggestionsQueryDto } from '../dto/scheduled-meal-suggesti
 import { ScheduledMealSuggestionDto } from '../dto/scheduled-meal-suggestion.dto';
 import { ScheduledMealSuggestionMapper } from '../mappers/scheduled-meal-suggestion.mapper';
 
+@ApiProtectedTag('Scheduled Meals')
 @Controller('scheduled-meals')
 export class ScheduledMealsController {
   constructor(private readonly scheduledMealsService: ScheduledMealsService) {}
 
   @Get('suggestions')
+  @ApiOperation({
+    summary: 'Sugerencias de comida planificada para un registro',
+    description: 'Devuelve comidas planificadas cercanas al momento del registro.',
+  })
+  @ApiOkResponse({ type: ScheduledMealSuggestionDto, isArray: true })
+  @ApiStandardMutationResponses()
   async getSuggestions(
     @CurrentProfileId() profileId: string,
     @Query() query: ScheduledMealSuggestionsQueryDto,
@@ -43,6 +61,9 @@ export class ScheduledMealsController {
   }
 
   @Get('calendar')
+  @ApiOperation({ summary: 'Días con comidas planificadas en un mes' })
+  @ApiOkResponse({ type: ScheduledMealsCalendarDto })
+  @ApiStandardMutationResponses()
   async getCalendar(
     @CurrentProfileId() profileId: string,
     @Query() query: CalendarScheduledMealsQueryDto,
@@ -56,6 +77,12 @@ export class ScheduledMealsController {
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'Listar comidas planificadas por fecha',
+    description: 'Incluye el estado de cada comida: completed, next, upcoming o missed.',
+  })
+  @ApiOkResponse({ type: ScheduledMealDto, isArray: true })
+  @ApiStandardMutationResponses()
   async listByDate(
     @CurrentProfileId() profileId: string,
     @Query() query: ListScheduledMealsQueryDto,
@@ -66,6 +93,14 @@ export class ScheduledMealsController {
   }
 
   @Post()
+  @ApiBodyExample(
+    CreateScheduledMealDto,
+    SwaggerRequestExamples.createScheduledMeal,
+    'Comida planificada con recetas',
+  )
+  @ApiOperation({ summary: 'Crear comida planificada' })
+  @ApiCreatedResponse({ type: ScheduledMealDto })
+  @ApiStandardMutationResponses()
   async create(
     @CurrentProfileId() profileId: string,
     @Body() body: CreateScheduledMealDto,
@@ -76,6 +111,14 @@ export class ScheduledMealsController {
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Obtener comida planificada por ID',
+    description:
+      'Si la comida está completada, incluye completionMealLog con foto, fecha de registro, contenido y etiquetas.',
+  })
+  @ApiUuidParam('id', 'ID de la comida planificada', SwaggerExamples.uuid.scheduledMeal)
+  @ApiOkResponse({ type: ScheduledMealDto })
+  @ApiStandardMutationResponses()
   async getById(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) scheduledMealId: string,
@@ -86,6 +129,10 @@ export class ScheduledMealsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Actualizar comida planificada' })
+  @ApiUuidParam('id', 'ID de la comida planificada', SwaggerExamples.uuid.scheduledMeal)
+  @ApiOkResponse({ type: ScheduledMealDto })
+  @ApiStandardMutationResponses()
   async update(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) scheduledMealId: string,
@@ -98,6 +145,10 @@ export class ScheduledMealsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Eliminar comida planificada' })
+  @ApiUuidParam('id', 'ID de la comida planificada', SwaggerExamples.uuid.scheduledMeal)
+  @ApiNoContentResponse({ description: 'Comida planificada eliminada' })
+  @ApiStandardMutationResponses()
   async delete(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) scheduledMealId: string,

@@ -1,0 +1,3 @@
+export const SLOW_REQUEST_THRESHOLD_MS = 500;
+
+export const HTTP_REQUEST_LOG_CONTEXT = 'HTTP';

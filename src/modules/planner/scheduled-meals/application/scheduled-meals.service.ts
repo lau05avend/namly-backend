@@ -52,7 +52,7 @@ export class ScheduledMealsService {
   }
 
   async getById(scheduledMealId: string, profileId: string): Promise<ScheduledMealEntity> {
-    const record = await this.scheduledMealRepository.findByIdForProfile(
+    const record = await this.scheduledMealRepository.findDetailByIdForProfile(
       scheduledMealId,
       profileId,
     );
@@ -62,11 +62,15 @@ export class ScheduledMealsService {
     }
 
     const statuses = await this.plannerStatusService.resolveStatusesForMeal(profileId, record);
+    const status = statuses.get(record.id) ?? 'upcoming';
+    const completionMealLogRecord =
+      status === 'completed' ? (record.mealLogs[0] ?? null) : null;
 
     return toScheduledMealEntity(
       record,
-      statuses.get(record.id) ?? 'upcoming',
+      status,
       this.scheduledMealRepository,
+      completionMealLogRecord,
     );
   }
 
