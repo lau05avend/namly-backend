@@ -12,6 +12,9 @@ export interface RequestContext extends Request {
   /** Mapped current user; set by RequestContextInterceptor for downstream use. */
   user?: CurrentUserInterface;
 
+  /** Set by LoggingInterceptor for request duration tracking. */
+  requestStartedAt?: number;
+
   /** TODO: guest user */
   isGuest?: boolean;
 }
