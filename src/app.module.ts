@@ -11,6 +11,7 @@ import { SupabaseModule } from '@infrastructure/database/supabase/supabase.modul
 import { AppEventsModule } from '@infrastructure/events/events.module';
 import { StorageModule } from '@infrastructure/storage/storage.module';
 import { CronModule } from '@infrastructure/cron/cron.module';
+import { HealthModule } from '@infrastructure/health/health.module';
 
 // Domain Modules (placeholders)
 import { AuthModule } from '@modules/auth/auth.module';
@@ -45,6 +46,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
     AppEventsModule,
     StorageModule,
     CronModule,
+    HealthModule,
 
     // Domain Modules
     AuthModule,
