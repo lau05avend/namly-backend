@@ -150,13 +150,17 @@ pnpm test:e2e       # tests e2e
 
 ## Swagger
 
-Con la aplicación en marcha, la documentación interactiva está disponible en:
+Con la aplicación en marcha, la documentación interactiva está en:
 
 ```
 http://localhost:3000/api/v1/docs
 ```
 
-Autenticación: botón **Authorize** con el token JWT de Supabase.
+- Autenticación: botón **Authorize** con el access token de Supabase (`Bearer <token>`).
+- Rutas públicas (sin candado): `GET /onboarding/questions`, `GET /tags/system`, `GET /meal-types/system`.
+- Los schemas de request/response se generan desde los DTOs con el plugin de `@nestjs/swagger`.
+- Decoradores compartidos en `src/docs/swagger/` para respuestas de error estándar.
+- Ejemplos reales en `src/docs/swagger/swagger.examples.ts`. Regenerar datos base con `pnpm exec ts-node scripts/fetch-swagger-samples.ts`.
 
 ## Estructura del repositorio
 

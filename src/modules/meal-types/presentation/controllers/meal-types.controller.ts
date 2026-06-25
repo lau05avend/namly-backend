@@ -10,20 +10,35 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Public } from '@common/decorators/public.decorator';
 import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
+import { ApiPublicOperation } from '@/docs/swagger/decorators/api-public-operation.decorator';
+import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
+import { SWAGGER_BEARER_AUTH } from '@/docs/swagger/swagger.constants';
 import { MealTypesService } from '../../application/meal-types.service';
-import type { MealTypeDto } from '../dto/meal-type.dto';
+import { MealTypeDto } from '../dto/meal-type.dto';
 import { CreateMealTypeDto } from '../dto/create-meal-type.dto';
 import { UpdateMealTypeDto } from '../dto/update-meal-type.dto';
 import { MealTypeMapper } from '../mappers/meal-type.mapper';
 
+@ApiTags('Meal Types')
 @Controller('meal-types')
 export class MealTypesController {
   constructor(private readonly mealTypesService: MealTypesService) {}
 
   @Public()
   @Get('system')
+  @ApiPublicOperation({ summary: 'Listar tipos de comida de sistema' })
+  @ApiOkResponse({ type: MealTypeDto, isArray: true })
   async getSystemMealTypes(): Promise<MealTypeDto[]> {
     const mealTypes = await this.mealTypesService.getSystemMealTypes();
 
@@ -31,6 +46,10 @@ export class MealTypesController {
   }
 
   @Get()
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({ summary: 'Listar tipos de comida del usuario' })
+  @ApiOkResponse({ type: MealTypeDto, isArray: true })
+  @ApiStandardMutationResponses()
   async getUserMealTypes(@CurrentProfileId() profileId: string): Promise<MealTypeDto[]> {
     const mealTypes = await this.mealTypesService.getUserMealTypes(profileId);
 
@@ -38,6 +57,10 @@ export class MealTypesController {
   }
 
   @Post()
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({ summary: 'Crear tipo de comida del usuario' })
+  @ApiCreatedResponse({ type: MealTypeDto })
+  @ApiStandardMutationResponses()
   async createUserMealType(
     @CurrentProfileId() profileId: string,
     @Body() body: CreateMealTypeDto,
@@ -48,6 +71,11 @@ export class MealTypesController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({ summary: 'Actualizar tipo de comida del usuario' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: MealTypeDto })
+  @ApiStandardMutationResponses()
   async updateUserMealType(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) mealTypeId: string,
@@ -60,6 +88,11 @@ export class MealTypesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({ summary: 'Eliminar tipo de comida del usuario' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'Tipo de comida eliminado' })
+  @ApiStandardMutationResponses()
   async deleteUserMealType(
     @CurrentProfileId() profileId: string,
     @Param('id', ParseUUIDPipe) mealTypeId: string,
