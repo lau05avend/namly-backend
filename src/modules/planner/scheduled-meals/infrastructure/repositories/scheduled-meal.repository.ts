@@ -15,11 +15,12 @@ const mealTypeSelect = {
   sortOrder: true,
 } as const;
 
-const mealLogExistsSelect = {
-  where: { ...notDeleted },
-  take: 1,
-  select: { id: true },
-} as const;
+const mealLogExistsSelect = (profileId: string) =>
+  ({
+    where: { ...notDeleted, profileId },
+    take: 1,
+    select: { id: true },
+  }) as const;
 
 const mealLogTagSelect = {
   id: true,
@@ -28,23 +29,24 @@ const mealLogTagSelect = {
   iconName: true,
 } as const;
 
-const mealLogCompletionSelect = {
-  where: { ...notDeleted },
-  orderBy: { loggedAt: 'desc' as const },
-  take: 1,
-  select: {
-    id: true,
-    mediaUrl: true,
-    loggedAt: true,
-    content: true,
-    tagLinks: {
-      where: { tag: { deletedAt: null } },
-      select: {
-        tag: { select: mealLogTagSelect },
+const mealLogCompletionSelect = (profileId: string) =>
+  ({
+    where: { ...notDeleted, profileId },
+    orderBy: { loggedAt: 'desc' as const },
+    take: 1,
+    select: {
+      id: true,
+      mediaUrl: true,
+      loggedAt: true,
+      content: true,
+      tagLinks: {
+        where: { tag: { deletedAt: null } },
+        select: {
+          tag: { select: mealLogTagSelect },
+        },
       },
     },
-  },
-} as const;
+  }) as const;
 
 const recipeSelect = {
   orderBy: { sortOrder: 'asc' as const },
@@ -113,7 +115,7 @@ export class ScheduledMealRepository {
         entryDate: parseEntryDate(entryDate),
       },
       orderBy: { plannedTime: 'asc' },
-      select: this.recordSelect(),
+      select: this.recordSelect(profileId),
     });
 
     return records.map((record) => this.toRecord(record));
@@ -129,7 +131,7 @@ export class ScheduledMealRepository {
         profileId,
         ...notDeleted,
       },
-      select: this.recordDetailSelect(),
+      select: this.recordDetailSelect(profileId),
     });
 
     if (!record) {
@@ -149,7 +151,7 @@ export class ScheduledMealRepository {
         profileId,
         ...notDeleted,
       },
-      select: this.recordSelect(),
+      select: this.recordSelect(profileId),
     });
 
     if (!record) {
@@ -291,7 +293,7 @@ export class ScheduledMealRepository {
     return mealLogsIds.length > 0;
   }
 
-  private recordSelect() {
+  private recordSelect(profileId: string) {
     return {
       id: true,
       mealTypeId: true,
@@ -301,11 +303,11 @@ export class ScheduledMealRepository {
       expressNote: true,
       mealType: { select: mealTypeSelect },
       scheduledMealRecipes: recipeSelect,
-      mealLogs: mealLogExistsSelect,
+      mealLogs: mealLogExistsSelect(profileId),
     };
   }
 
-  private recordDetailSelect() {
+  private recordDetailSelect(profileId: string) {
     return {
       id: true,
       mealTypeId: true,
@@ -315,7 +317,7 @@ export class ScheduledMealRepository {
       expressNote: true,
       mealType: { select: mealTypeSelect },
       scheduledMealRecipes: recipeSelect,
-      mealLogs: mealLogCompletionSelect,
+      mealLogs: mealLogCompletionSelect(profileId),
     };
   }
 
