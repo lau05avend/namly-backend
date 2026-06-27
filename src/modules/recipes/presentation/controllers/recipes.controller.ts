@@ -37,7 +37,12 @@ export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar recetas del usuario con filtros opcionales' })
+  @ApiOperation({
+    summary: 'Listar recetas del usuario con filtros opcionales',
+    description:
+      'Cada ítem incluye el rating promedio de todas las interacciones con valoración. ' +
+      'La valoración personal del usuario se obtiene en el detalle (`interaction.rating`).',
+  })
   @ApiOkResponse({ type: RecipeListItemDto, isArray: true })
   @ApiStandardMutationResponses()
   async listRecipes(
