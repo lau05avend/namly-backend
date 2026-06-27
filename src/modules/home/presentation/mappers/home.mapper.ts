@@ -81,8 +81,8 @@ export class HomeMapper {
     dto.id = entity.id;
     dto.mealTypeName = entity.mealTypeName;
     dto.loggedAt = entity.loggedAt;
-    dto.detail = entity.detail;
-    dto.mediaUrl = entity.mediaUrl;
+    dto.detail = entity.detail ?? '';
+    dto.mediaUrl = entity.mediaUrl ?? '';
     return dto;
   }
 
@@ -91,7 +91,7 @@ export class HomeMapper {
     dto.id = entity.id;
     dto.title = entity.title;
     dto.meta = entity.meta;
-    dto.imageUrl = entity.imageUrl;
+    dto.imageUrl = entity.imageUrl ?? '';
     return dto;
   }
 }

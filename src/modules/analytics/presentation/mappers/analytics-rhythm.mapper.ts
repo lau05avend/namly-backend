@@ -45,8 +45,8 @@ export class AnalyticsRhythmMapper {
     entity: AnalyticsRhythmEntity['week']['comparison'],
   ): RhythmWeekComparisonDto {
     const dto = new RhythmWeekComparisonDto();
-    dto.deltaPercentage = entity.deltaPercentage;
-    dto.message = entity.message;
+    dto.deltaPercentage = entity.deltaPercentage ?? 0;
+    dto.message = entity.message ?? '';
     return dto;
   }
 

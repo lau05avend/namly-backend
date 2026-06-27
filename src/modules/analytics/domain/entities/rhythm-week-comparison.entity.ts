@@ -1,4 +1,4 @@
 export interface RhythmWeekComparisonEntity {
-  readonly deltaPercentage: number | null;
-  readonly message: string | null;
+  readonly deltaPercentage: number;
+  readonly message: string;
 }

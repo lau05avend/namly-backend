@@ -89,13 +89,11 @@ export class HomeRegisteredMealDto {
   @IsDate()
   loggedAt!: Date;
 
-  @IsOptional()
   @IsString()
-  detail!: string | null;
+  detail!: string;
 
-  @IsOptional()
   @IsString()
-  mediaUrl!: string | null;
+  mediaUrl!: string;
 }
 
 export class HomeRegisteredTodayDto {
@@ -119,9 +117,8 @@ export class HomeRecommendationDto {
   @IsString()
   meta!: string;
 
-  @IsOptional()
   @IsString()
-  imageUrl!: string | null;
+  imageUrl!: string;
 }
 
 export class HomeDto {

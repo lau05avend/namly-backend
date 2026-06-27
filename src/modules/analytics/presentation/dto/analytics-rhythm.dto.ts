@@ -5,7 +5,6 @@ import {
   IsIn,
   IsInt,
   IsNumber,
-  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -23,13 +22,11 @@ export class RhythmWeekSummaryDto {
 }
 
 export class RhythmWeekComparisonDto {
-  @IsOptional()
   @IsNumber()
-  deltaPercentage!: number | null;
+  deltaPercentage!: number;
 
-  @IsOptional()
   @IsString()
-  message!: string | null;
+  message!: string;
 }
 
 export class RhythmWeekDayDto {

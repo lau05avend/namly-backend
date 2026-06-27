@@ -13,8 +13,8 @@ export function resolveWeekComparison(
 
   if (previousActiveDays < RHYTHM_COMPARISON_MIN_ACTIVE_DAYS) {
     return {
-      deltaPercentage: null,
-      message: null,
+      deltaPercentage: 0,
+      message: '',
     };
   }
 
