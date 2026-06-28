@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsString, IsUUID, Min } from 'class-validator';
 
 export class MealTypeDto {
   @IsUUID()
@@ -10,4 +10,7 @@ export class MealTypeDto {
   @IsInt()
   @Min(0)
   sortOrder!: number;
+
+  @IsBoolean()
+  isFrequent!: boolean;
 }

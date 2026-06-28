@@ -54,6 +54,52 @@ export class MealTypeRepository {
     return records.map((record) => this.toEntity(record));
   }
 
+  async findMealTypeUsageCountsByProfileId(profileId: string): Promise<Map<string, number>> {
+    const notDeleted = { deletedAt: null } as const;
+
+    const [mealLogGroups, scheduledMealGroups] = await Promise.all([
+      this.prisma.mealLog.groupBy({
+        by: ['mealTypeId'],
+        where: {
+          profileId,
+          ...notDeleted,
+          mealTypeId: { not: null },
+        },
+        _count: { _all: true },
+      }),
+      this.prisma.scheduledMeal.groupBy({
+        by: ['mealTypeId'],
+        where: {
+          profileId,
+          ...notDeleted,
+        },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const usageCountByMealTypeId = new Map<string, number>();
+
+    for (const group of mealLogGroups) {
+      if (!group.mealTypeId) {
+        continue;
+      }
+
+      usageCountByMealTypeId.set(
+        group.mealTypeId,
+        (usageCountByMealTypeId.get(group.mealTypeId) ?? 0) + group._count._all,
+      );
+    }
+
+    for (const group of scheduledMealGroups) {
+      usageCountByMealTypeId.set(
+        group.mealTypeId,
+        (usageCountByMealTypeId.get(group.mealTypeId) ?? 0) + group._count._all,
+      );
+    }
+
+    return usageCountByMealTypeId;
+  }
+
   async countUserMealTypesByProfileId(profileId: string): Promise<number> {
     return this.prisma.mealType.count({
       where: userMealTypeWhere(profileId),
