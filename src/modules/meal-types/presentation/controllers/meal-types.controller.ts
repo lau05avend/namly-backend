@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -30,6 +31,7 @@ import type { MealTypeListItemEntity } from '../../domain/entities/meal-type-lis
 import { MealTypeDto } from '../dto/meal-type.dto';
 import { ListMealTypesQueryDto } from '../dto/list-meal-types-query.dto';
 import { CreateMealTypeDto } from '../dto/create-meal-type.dto';
+import { ReorderMealTypesDto } from '../dto/reorder-meal-types.dto';
 import { UpdateMealTypeDto } from '../dto/update-meal-type.dto';
 import { MealTypeMapper } from '../mappers/meal-type.mapper';
 
@@ -85,6 +87,27 @@ export class MealTypesController {
     const mealType = await this.mealTypesService.createUserMealType(profileId, body);
 
     return MealTypeMapper.toDto(mealType);
+  }
+
+  @Put('reorder')
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({
+    summary: 'Reordenar tipos de comida del usuario de forma masiva',
+    description:
+      'Recibe la lista completa de IDs en el orden deseado. La posición en el array define `sortOrder` (0-based).',
+  })
+  @ApiOkResponse({ type: MealTypeDto, isArray: true })
+  @ApiStandardMutationResponses()
+  async reorderUserMealTypes(
+    @CurrentProfileId() profileId: string,
+    @Body() body: ReorderMealTypesDto,
+  ): Promise<MealTypeDto[]> {
+    const mealTypes: MealTypeListItemEntity[] = await this.mealTypesService.reorderUserMealTypes(
+      profileId,
+      body.mealTypeIds,
+    );
+
+    return MealTypeMapper.toListItemDtoList(mealTypes);
   }
 
   @Patch(':id')

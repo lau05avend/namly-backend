@@ -9,6 +9,8 @@ import type { MealTypeListItemEntity } from '../domain/entities/meal-type-list-i
 import type { CreateMealTypeParams } from '../domain/interfaces/create-meal-type-params.interface';
 import type { GetUserMealTypesOptions } from '../domain/interfaces/get-user-meal-types-options.interface';
 import type { UpdateMealTypeParams } from '../domain/interfaces/update-meal-type-params.interface';
+import { DEFAULT_FREQUENT_MEAL_TYPES_LIMIT } from '../domain/constants/meal-type-list.constants';
+import { validateMealTypeReorder } from '../domain/rules/validate-meal-type-reorder.util';
 import { resolveFrequentMealTypeIds } from '../domain/utils/resolve-frequent-meal-type-ids.util';
 import {
   resolveAllMealTypesWithFrequentFlag,
@@ -46,6 +48,33 @@ export class MealTypesService {
     }
 
     return resolveAllMealTypesWithFrequentFlag(userMealTypes, frequentMealTypeIds);
+  }
+
+  async reorderUserMealTypes(
+    profileId: string,
+    mealTypeIds: readonly string[],
+  ): Promise<MealTypeListItemEntity[]> {
+    await this.mealTypeRepository.ensureUserMealTypesInitialized(profileId);
+
+    const existingMealTypeIds =
+      await this.mealTypeRepository.findUserMealTypeIdsByProfileId(profileId);
+
+    const validationError = validateMealTypeReorder(existingMealTypeIds, mealTypeIds);
+
+    if (validationError === 'incomplete') {
+      throw new BadRequestException('mealTypeIds must include every user meal type exactly once');
+    }
+
+    if (validationError === 'unknown-id') {
+      throw new BadRequestException('One or more meal type IDs are invalid for this profile');
+    }
+
+    await this.mealTypeRepository.reorderUserMealTypes(profileId, mealTypeIds);
+
+    return this.getUserMealTypes(profileId, {
+      view: 'all',
+      limit: DEFAULT_FREQUENT_MEAL_TYPES_LIMIT,
+    });
   }
 
   async createUserMealType(

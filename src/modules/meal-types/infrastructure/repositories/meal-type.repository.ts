@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@/generated/prisma/client';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { MEAL_TYPE_REORDER_SORT_ORDER_TEMP_OFFSET } from '../../domain/constants/meal-type-reorder.constants';
 import type { MealTypeEntity } from '../../domain/entities/meal-type.entity';
 import type { CreateMealTypeParams } from '../../domain/interfaces/create-meal-type-params.interface';
 import type { UpdateMealTypeParams } from '../../domain/interfaces/update-meal-type-params.interface';
@@ -52,6 +54,25 @@ export class MealTypeRepository {
     });
 
     return records.map((record) => this.toEntity(record));
+  }
+
+  async findUserMealTypeIdsByProfileId(profileId: string): Promise<string[]> {
+    const records = await this.prisma.mealType.findMany({
+      where: userMealTypeWhere(profileId),
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true },
+    });
+
+    return records.map((record) => record.id);
+  }
+
+  async reorderUserMealTypes(profileId: string, mealTypeIds: readonly string[]): Promise<void> {
+    const tempOffset = MEAL_TYPE_REORDER_SORT_ORDER_TEMP_OFFSET;
+
+    await this.prisma.$transaction(async (tx) => {
+      await this.applyMealTypeSortOrders(tx, profileId, mealTypeIds, tempOffset);
+      await this.applyMealTypeSortOrders(tx, profileId, mealTypeIds, 0);
+    });
   }
 
   async findMealTypeUsageCountsByProfileId(profileId: string): Promise<Map<string, number>> {
@@ -237,6 +258,26 @@ export class MealTypeRepository {
     });
 
     return this.toEntity(record);
+  }
+
+  private async applyMealTypeSortOrders(
+    tx: Prisma.TransactionClient,
+    profileId: string,
+    mealTypeIds: readonly string[],
+    sortOrderOffset: number,
+  ): Promise<void> {
+    for (let index = 0; index < mealTypeIds.length; index += 1) {
+      await tx.mealType.updateMany({
+        where: {
+          id: mealTypeIds[index],
+          ...userMealTypeWhere(profileId),
+        },
+        data: {
+          sortOrder: index + sortOrderOffset,
+          updatedAt: new Date(),
+        },
+      });
+    }
   }
 
   private async findOwnedUserMealType(
