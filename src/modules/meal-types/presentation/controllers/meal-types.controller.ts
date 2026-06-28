@@ -9,6 +9,8 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,8 +27,11 @@ import { ApiPublicOperation } from '@/docs/swagger/decorators/api-public-operati
 import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
 import { SWAGGER_BEARER_AUTH } from '@/docs/swagger/swagger.constants';
 import { MealTypesService } from '../../application/meal-types.service';
+import type { MealTypeListItemEntity } from '../../domain/entities/meal-type-list-item.entity';
 import { MealTypeDto } from '../dto/meal-type.dto';
+import { ListMealTypesQueryDto } from '../dto/list-meal-types-query.dto';
 import { CreateMealTypeDto } from '../dto/create-meal-type.dto';
+import { ReorderMealTypesDto } from '../dto/reorder-meal-types.dto';
 import { UpdateMealTypeDto } from '../dto/update-meal-type.dto';
 import { MealTypeMapper } from '../mappers/meal-type.mapper';
 
@@ -47,13 +52,27 @@ export class MealTypesController {
 
   @Get()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
-  @ApiOperation({ summary: 'Listar tipos de comida del usuario' })
+  @ApiOperation({
+    summary: 'Listar tipos de comida del usuario',
+    description:
+      'Por defecto (`view=all`) devuelve todos los tipos ordenados por `sortOrder` con `isFrequent` en cada ítem. ' +
+      'Con `view=frequent` devuelve solo el top N habitual según uso en meal logs y comidas planificadas.',
+  })
   @ApiOkResponse({ type: MealTypeDto, isArray: true })
   @ApiStandardMutationResponses()
-  async getUserMealTypes(@CurrentProfileId() profileId: string): Promise<MealTypeDto[]> {
-    const mealTypes = await this.mealTypesService.getUserMealTypes(profileId);
+  async getUserMealTypes(
+    @CurrentProfileId() profileId: string,
+    @Query() query: ListMealTypesQueryDto,
+  ): Promise<MealTypeDto[]> {
+    const mealTypes: MealTypeListItemEntity[] = await this.mealTypesService.getUserMealTypes(
+      profileId,
+      {
+        view: query.view,
+        limit: query.limit,
+      },
+    );
 
-    return MealTypeMapper.toDtoList(mealTypes);
+    return MealTypeMapper.toListItemDtoList(mealTypes);
   }
 
   @Post()
@@ -68,6 +87,27 @@ export class MealTypesController {
     const mealType = await this.mealTypesService.createUserMealType(profileId, body);
 
     return MealTypeMapper.toDto(mealType);
+  }
+
+  @Put('reorder')
+  @ApiBearerAuth(SWAGGER_BEARER_AUTH)
+  @ApiOperation({
+    summary: 'Reordenar tipos de comida del usuario de forma masiva',
+    description:
+      'Recibe la lista completa de IDs en el orden deseado. La posición en el array define `sortOrder` (0-based).',
+  })
+  @ApiOkResponse({ type: MealTypeDto, isArray: true })
+  @ApiStandardMutationResponses()
+  async reorderUserMealTypes(
+    @CurrentProfileId() profileId: string,
+    @Body() body: ReorderMealTypesDto,
+  ): Promise<MealTypeDto[]> {
+    const mealTypes: MealTypeListItemEntity[] = await this.mealTypesService.reorderUserMealTypes(
+      profileId,
+      body.mealTypeIds,
+    );
+
+    return MealTypeMapper.toListItemDtoList(mealTypes);
   }
 
   @Patch(':id')

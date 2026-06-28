@@ -56,14 +56,26 @@ export class RecipeRepository {
         createdAt: true,
         userRecipeInteractions: {
           where: { profileId },
-          orderBy: { createdAt: 'asc' },
           take: 1,
-          select: interactionSelect,
+          select: {
+            isFavorite: true,
+            isHidden: true,
+          },
         },
       },
     });
 
-    return records.map((record) => this.toListItem(record, profileId));
+    if (records.length === 0) {
+      return [];
+    }
+
+    const averageRatingsByRecipeId = await this.resolveAverageRatingsByRecipeId(
+      records.map((record) => record.id),
+    );
+
+    return records.map((record) =>
+      this.toListItem(record, profileId, averageRatingsByRecipeId.get(record.id) ?? null),
+    );
   }
 
   async findDetailById(recipeId: string, profileId: string): Promise<RecipeDetailEntity | null> {
@@ -305,6 +317,31 @@ export class RecipeRepository {
     };
   }
 
+  private async resolveAverageRatingsByRecipeId(
+    recipeIds: readonly string[],
+  ): Promise<Map<string, number>> {
+    const aggregates = await this.prisma.userRecipeInteraction.groupBy({
+      by: ['recipeId'],
+      where: {
+        recipeId: { in: [...recipeIds] },
+        rating: { not: null },
+      },
+      _avg: { rating: true },
+    });
+
+    const averageRatingsByRecipeId = new Map<string, number>();
+
+    for (const aggregate of aggregates) {
+      const averageRating = aggregate._avg.rating;
+
+      if (averageRating !== null) {
+        averageRatingsByRecipeId.set(aggregate.recipeId, Math.round(averageRating * 10) / 10);
+      }
+    }
+
+    return averageRatingsByRecipeId;
+  }
+
   private toListItem(
     record: {
       id: string;
@@ -316,12 +353,12 @@ export class RecipeRepository {
       updatedAt: Date;
       createdAt: Date;
       userRecipeInteractions: Array<{
-        rating: number | null;
         isFavorite: boolean;
         isHidden: boolean;
       }>;
     },
     viewerProfileId: string,
+    averageRating: number | null,
   ): RecipeListItemEntity {
     const interaction = record.userRecipeInteractions[0];
 
@@ -329,7 +366,7 @@ export class RecipeRepository {
       id: record.id,
       title: record.title,
       coverUrl: record.coverUrl,
-      rating: interaction?.rating ?? null,
+      rating: averageRating,
       isFavorite: interaction?.isFavorite ?? false,
       isHidden: interaction?.isHidden ?? false,
       isSuggested: record.isSuggested,
