@@ -18,4 +18,5 @@ export interface HomeScheduledMealEntity {
   readonly title: string;
   readonly items: readonly HomeScheduledMealItemEntity[];
   readonly moreCount: number;
+  readonly totalDurationMinutes: number | null;
 }

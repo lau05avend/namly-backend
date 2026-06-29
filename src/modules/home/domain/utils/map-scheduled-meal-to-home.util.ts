@@ -1,5 +1,5 @@
 import type { ScheduledMealEntity } from '@modules/planner/scheduled-meals/domain/entities/scheduled-meal.entity';
-import { HOME_SCHEDULED_MEAL_VISIBLE_ITEMS } from '../constants/home.constants';
+import { SCHEDULED_MEAL_MAX_RECIPES } from '@modules/planner/scheduled-meals/domain/constants/scheduled-meal.constants';
 import type { HomeScheduledMealEntity } from '../entities/home-scheduled-meal.entity';
 
 export function mapScheduledMealToHomeEntity(meal: ScheduledMealEntity): HomeScheduledMealEntity {
@@ -8,7 +8,7 @@ export function mapScheduledMealToHomeEntity(meal: ScheduledMealEntity): HomeSch
     : [...meal.recipes].sort((left, right) => left.sortOrder - right.sortOrder);
 
   const title = resolveScheduledMealTitle(meal, recipes);
-  const visibleRecipes = recipes.slice(0, HOME_SCHEDULED_MEAL_VISIBLE_ITEMS);
+  const visibleRecipes = recipes.slice(0, SCHEDULED_MEAL_MAX_RECIPES);
   const items = visibleRecipes.map((recipe) => ({
     id: recipe.id,
     label: recipe.title,
@@ -23,6 +23,7 @@ export function mapScheduledMealToHomeEntity(meal: ScheduledMealEntity): HomeSch
     title,
     items,
     moreCount: Math.max(0, recipes.length - items.length),
+    totalDurationMinutes: meal.totalDurationMinutes,
   };
 }
 

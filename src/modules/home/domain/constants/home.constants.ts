@@ -1,1 +1,0 @@
-export const HOME_SCHEDULED_MEAL_VISIBLE_ITEMS = 1;

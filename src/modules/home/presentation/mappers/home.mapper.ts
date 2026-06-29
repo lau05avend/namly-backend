@@ -38,6 +38,7 @@ export class HomeMapper {
     dto.title = entity.title;
     dto.items = entity.items.map((item) => this.toScheduledMealItemDto(item));
     dto.moreCount = entity.moreCount;
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
     return dto;
   }
 

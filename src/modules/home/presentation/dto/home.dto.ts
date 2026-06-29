@@ -59,6 +59,11 @@ export class HomeScheduledMealDto {
   @IsInt()
   @Min(0)
   moreCount!: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  totalDurationMinutes!: number | null;
 }
 
 export class HomeStreakDto {
