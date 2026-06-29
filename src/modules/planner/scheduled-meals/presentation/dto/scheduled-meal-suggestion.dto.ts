@@ -8,6 +8,7 @@ import {
   Matches,
   ValidateNested,
 } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ScheduledMealMealTypeDto } from './scheduled-meal-meal-type.dto';
 import { ScheduledMealRecipeDto } from './scheduled-meal-recipe.dto';
 
@@ -26,6 +27,14 @@ export class ScheduledMealSuggestionDto {
   @ValidateNested({ each: true })
   @Type(() => ScheduledMealRecipeDto)
   recipes!: ScheduledMealRecipeDto[];
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Suma de durationMinutes de recipes[]. null si express o sin tiempos.',
+    example: 45,
+  })
+  @IsOptional()
+  totalDurationMinutes!: number | null;
 
   @IsBoolean()
   isExpress!: boolean;

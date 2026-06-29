@@ -13,3 +13,11 @@ export function resolveRecipeTotalDurationMinutes(
 export function toRecipeListDurationMinutes(totalMinutes: number): number | null {
   return totalMinutes > 0 ? totalMinutes : null;
 }
+
+export function computeStoredRecipeTotalDurationMinutes(
+  stepDurations: readonly (number | null | undefined)[],
+): number | null {
+  return toRecipeListDurationMinutes(
+    resolveRecipeTotalDurationMinutes(stepDurations.map((duration) => duration ?? null)),
+  );
+}

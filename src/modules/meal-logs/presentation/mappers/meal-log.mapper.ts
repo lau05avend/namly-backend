@@ -40,6 +40,7 @@ export class MealLogMapper {
     dto.scheduledMeal = entity.scheduledMeal ? this.toScheduledMealDto(entity.scheduledMeal) : null;
     dto.recipes = entity.recipes.map((recipe) => this.toRecipeDto(recipe));
     dto.tags = entity.tags.map((tag) => this.toTagDto(tag));
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
 
     return dto;
   }
@@ -66,6 +67,7 @@ export class MealLogMapper {
     dto.expressNote = entity.expressNote;
     dto.mealType = this.toMealTypeDto(entity.mealType);
     dto.recipes = entity.recipes.map((recipe) => this.toRecipeDto(recipe));
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
 
     return dto;
   }

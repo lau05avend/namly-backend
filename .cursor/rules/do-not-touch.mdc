@@ -17,3 +17,4 @@ Do not:
 - change Supabase role (Auth/Storage separation)
 - modify RequestContext flow
 - introduce new persistence patterns
+- run `prisma migrate` against the user's database; schema changes go in `scripts/sql/` for manual application

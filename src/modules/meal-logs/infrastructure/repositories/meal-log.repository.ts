@@ -36,6 +36,7 @@ const mealLogRecipeSelect = {
       select: {
         title: true,
         coverUrl: true,
+        totalDurationMinutes: true,
       },
     },
   },
@@ -61,7 +62,7 @@ export type MealLogDetailRecord = {
     id: string;
     recipe_id: string;
     sort_order: number;
-    recipes: { title: string; coverUrl: string | null };
+    recipes: { title: string; coverUrl: string | null; totalDurationMinutes: number | null };
   }>;
   tagLinks: Array<{
     tag: {
@@ -82,7 +83,7 @@ export type MealLogDetailRecord = {
       id: string;
       recipeId: string;
       sortOrder: number;
-      recipe: { title: string; coverUrl: string | null };
+      recipe: { title: string; coverUrl: string | null; totalDurationMinutes: number | null };
     }>;
   } | null;
 };
@@ -161,7 +162,7 @@ export class MealLogRepository {
                 id: true,
                 recipeId: true,
                 sortOrder: true,
-                recipe: { select: { title: true, coverUrl: true } },
+                recipe: { select: { title: true, coverUrl: true, totalDurationMinutes: true } },
               },
             },
           },

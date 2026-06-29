@@ -1,4 +1,5 @@
 import { formatTimeToLocalString } from '@/modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
+import { resolveRecipeLinksTotalDurationMinutes } from '@modules/recipes/domain/utils/resolve-recipe-links-total-duration-minutes.util';
 import type { MealLogDetailEntity } from '../domain/entities/meal-log-detail.entity';
 import type { MealLogHistoryItemEntity } from '../domain/entities/meal-log-history-item.entity';
 import type {
@@ -22,6 +23,27 @@ export function toMealLogDetailEntity(
   record: MealLogDetailRecord,
   repository: MealLogRepository,
 ): MealLogDetailEntity {
+  const recipes = record.meal_log_recipes.map((item) => ({
+    id: item.id,
+    recipeId: item.recipe_id,
+    title: item.recipes.title,
+    coverUrl: item.recipes.coverUrl,
+    durationMinutes: item.recipes.totalDurationMinutes,
+    sortOrder: item.sort_order,
+  }));
+
+  const scheduledMealRecipes =
+    record.scheduledMeal && record.scheduledMeal.isExpress !== true
+      ? record.scheduledMeal.scheduledMealRecipes.map((item) => ({
+          id: item.id,
+          recipeId: item.recipeId,
+          title: item.recipe.title,
+          coverUrl: item.recipe.coverUrl,
+          durationMinutes: item.recipe.totalDurationMinutes,
+          sortOrder: item.sortOrder,
+        }))
+      : [];
+
   return {
     id: record.id,
     mediaUrl: record.mediaUrl ?? '',
@@ -37,27 +59,12 @@ export function toMealLogDetailEntity(
           isExpress: record.scheduledMeal.isExpress,
           expressNote: record.scheduledMeal.isExpress ? record.scheduledMeal.expressNote : null,
           mealType: record.scheduledMeal.mealType,
-          recipes:
-            record.scheduledMeal.isExpress === true
-              ? []
-              : record.scheduledMeal.scheduledMealRecipes.map((item) => ({
-                  id: item.id,
-                  recipeId: item.recipeId,
-                  title: item.recipe.title,
-                  coverUrl: item.recipe.coverUrl,
-                  durationMinutes: null,
-                  sortOrder: item.sortOrder,
-                })),
+          recipes: scheduledMealRecipes,
+          totalDurationMinutes: resolveRecipeLinksTotalDurationMinutes(scheduledMealRecipes),
         }
       : null,
-    recipes: record.meal_log_recipes.map((item) => ({
-      id: item.id,
-      recipeId: item.recipe_id,
-      title: item.recipes.title,
-      coverUrl: item.recipes.coverUrl,
-      durationMinutes: null,
-      sortOrder: item.sort_order,
-    })),
+    recipes,
     tags: record.tagLinks.map((link) => link.tag),
+    totalDurationMinutes: resolveRecipeLinksTotalDurationMinutes(recipes),
   };
 }

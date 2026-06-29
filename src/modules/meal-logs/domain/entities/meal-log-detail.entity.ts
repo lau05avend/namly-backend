@@ -13,4 +13,5 @@ export interface MealLogDetailEntity {
   readonly scheduledMeal: MealLogScheduledMealEntity | null;
   readonly recipes: readonly MealLogRecipeEntity[];
   readonly tags: readonly MealLogTagEntity[];
+  readonly totalDurationMinutes: number | null;
 }

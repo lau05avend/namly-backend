@@ -36,4 +36,7 @@ export class MealLogScheduledMealDto {
   @ValidateNested({ each: true })
   @Type(() => MealLogRecipeDto)
   recipes!: MealLogRecipeDto[];
+
+  @IsOptional()
+  totalDurationMinutes!: number | null;
 }

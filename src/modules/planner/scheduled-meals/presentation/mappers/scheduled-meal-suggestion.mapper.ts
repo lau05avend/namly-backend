@@ -11,6 +11,7 @@ export class ScheduledMealSuggestionMapper {
     dto.plannedTime = entity.plannedTime;
     dto.mealType = this.toMealTypeDto(entity);
     dto.recipes = entity.recipes.map((recipe) => this.toRecipeDto(recipe));
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
     dto.isExpress = entity.isExpress;
     dto.expressNote = entity.expressNote;
 

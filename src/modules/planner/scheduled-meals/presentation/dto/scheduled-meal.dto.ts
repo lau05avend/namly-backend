@@ -51,6 +51,14 @@ export class ScheduledMealDto {
   @Type(() => ScheduledMealRecipeDto)
   recipes?: ScheduledMealRecipeDto[];
 
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Suma de durationMinutes de recipes[]. null si express o sin tiempos.',
+    example: 45,
+  })
+  @IsOptional()
+  totalDurationMinutes!: number | null;
+
   @ApiProperty({ enum: SCHEDULED_MEAL_STATUSES })
   @IsIn(SCHEDULED_MEAL_STATUSES)
   status!: (typeof SCHEDULED_MEAL_STATUSES)[number];

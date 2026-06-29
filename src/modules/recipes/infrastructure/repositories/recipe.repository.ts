@@ -10,10 +10,6 @@ import type { CreateRecipeCoreParams } from '../../domain/interfaces/create-reci
 import type { UpdateRecipeCoreParams } from '../../domain/interfaces/update-recipe-core-params.interface';
 import { resolveRecipeMutationPermissions } from '../../domain/rules/resolve-recipe-mutation-permissions.util';
 import { resolveRecipeOrigin } from '../../domain/utils/resolve-recipe-origin.util';
-import {
-  resolveRecipeTotalDurationMinutes,
-  toRecipeListDurationMinutes,
-} from '../../domain/utils/resolve-recipe-total-duration-minutes.util';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -54,6 +50,7 @@ export class RecipeRepository {
         id: true,
         title: true,
         coverUrl: true,
+        totalDurationMinutes: true,
         profileId: true,
         isSuggested: true,
         isPublic: true,
@@ -78,16 +75,12 @@ export class RecipeRepository {
       records.map((record) => record.id),
     );
 
-    const durationMinutesByRecipeId = await this.findTotalDurationMinutesByRecipeIds(
-      records.map((record) => record.id),
-    );
-
     return records.map((record) =>
       this.toListItem(
         record,
         profileId,
         averageRatingsByRecipeId.get(record.id) ?? null,
-        durationMinutesByRecipeId.get(record.id) ?? null,
+        record.totalDurationMinutes,
       ),
     );
   }
@@ -167,6 +160,20 @@ export class RecipeRepository {
         ...(params.description !== undefined && { description: params.description }),
         ...(params.coverUrl !== undefined && { coverUrl: params.coverUrl }),
         ...(params.isPublic !== undefined && { isPublic: params.isPublic }),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async updateTotalDurationMinutes(
+    tx: Prisma.TransactionClient,
+    recipeId: string,
+    totalDurationMinutes: number | null,
+  ): Promise<void> {
+    await tx.recipe.update({
+      where: { id: recipeId },
+      data: {
+        totalDurationMinutes,
         updatedAt: new Date(),
       },
     });
@@ -286,6 +293,7 @@ export class RecipeRepository {
       description: true,
       coverUrl: true,
       isPublic: true,
+      totalDurationMinutes: true,
       createdAt: true,
       updatedAt: true,
       profile: {
@@ -362,31 +370,6 @@ export class RecipeRepository {
     return averageRatingsByRecipeId;
   }
 
-  async findTotalDurationMinutesByRecipeIds(
-    recipeIds: readonly string[],
-  ): Promise<Map<string, number | null>> {
-    if (recipeIds.length === 0) {
-      return new Map();
-    }
-
-    const aggregates = await this.prisma.recipeStep.groupBy({
-      by: ['recipeId'],
-      where: { recipeId: { in: [...recipeIds] } },
-      _sum: { durationMinutes: true },
-    });
-
-    const durationMinutesByRecipeId = new Map<string, number | null>();
-
-    for (const aggregate of aggregates) {
-      durationMinutesByRecipeId.set(
-        aggregate.recipeId,
-        toRecipeListDurationMinutes(aggregate._sum.durationMinutes ?? 0),
-      );
-    }
-
-    return durationMinutesByRecipeId;
-  }
-
   private toListItem(
     record: {
       id: string;
@@ -432,6 +415,7 @@ export class RecipeRepository {
       description: string | null;
       coverUrl: string | null;
       isPublic: boolean;
+      totalDurationMinutes: number | null;
       createdAt: Date;
       updatedAt: Date;
       profile: {
@@ -478,9 +462,6 @@ export class RecipeRepository {
   ): RecipeDetailEntity {
     const interactionRecord = record.userRecipeInteractions[0];
     const { canEdit, canDelete } = resolveRecipeMutationPermissions(record, viewerProfileId);
-    const durationMinutes = toRecipeListDurationMinutes(
-      resolveRecipeTotalDurationMinutes(record.steps.map((step) => step.durationMinutes)),
-    );
 
     return {
       recipe: {
@@ -488,7 +469,7 @@ export class RecipeRepository {
         title: record.title,
         description: record.description,
         coverUrl: record.coverUrl,
-        durationMinutes,
+        durationMinutes: record.totalDurationMinutes,
         isPublic: record.isPublic,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,

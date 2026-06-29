@@ -1,10 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { RecipesService } from '@modules/recipes/application/recipes.service';
-import {
-  attachDurationMinutesToRecipeLinks,
-  collectUniqueRecipeIds,
-} from '@modules/recipes/domain/utils/attach-duration-minutes-to-recipe-links.util';
 import type { ScheduledMealEntity } from '../domain/entities/scheduled-meal.entity';
 import type { CreateScheduledMealParams } from '../domain/interfaces/create-scheduled-meal-params.interface';
 import type { UpdateScheduledMealParams } from '../domain/interfaces/update-scheduled-meal-params.interface';
@@ -20,6 +15,7 @@ import {
   parseMonthParam,
   toPlannedInstant,
 } from '../domain/utils/scheduled-meal-datetime.util';
+import { resolveRecipeLinksTotalDurationMinutes } from '@modules/recipes/domain/utils/resolve-recipe-links-total-duration-minutes.util';
 import {
   ScheduledMealRepository,
   type ScheduledMealRecord,
@@ -37,7 +33,6 @@ export class ScheduledMealsService {
     private readonly plannerStatusService: PlannerStatusService,
     private readonly createScheduledMealUseCase: CreateScheduledMealUseCase,
     private readonly updateScheduledMealUseCase: UpdateScheduledMealUseCase,
-    private readonly recipesService: RecipesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -72,32 +67,12 @@ export class ScheduledMealsService {
     const completionMealLogRecord =
       status === 'completed' ? (record.mealLogs[0] ?? null) : null;
 
-    return this.enrichScheduledMealWithRecipeDurations(
-      toScheduledMealEntity(
-        record,
-        status,
-        this.scheduledMealRepository,
-        completionMealLogRecord,
-      ),
+    return toScheduledMealEntity(
+      record,
+      status,
+      this.scheduledMealRepository,
+      completionMealLogRecord,
     );
-  }
-
-  private async enrichScheduledMealWithRecipeDurations(
-    entity: ScheduledMealEntity,
-  ): Promise<ScheduledMealEntity> {
-    if (entity.isExpress || entity.recipes.length === 0) {
-      return entity;
-    }
-
-    const durationMinutesByRecipeId =
-      await this.recipesService.findTotalDurationMinutesByRecipeIds(
-        collectUniqueRecipeIds(entity.recipes),
-      );
-
-    return {
-      ...entity,
-      recipes: attachDurationMinutesToRecipeLinks(entity.recipes, durationMinutesByRecipeId),
-    };
   }
 
   async getCalendarDays(profileId: string, month: string): Promise<readonly string[]> {
@@ -213,14 +188,17 @@ export class ScheduledMealsService {
   }
 
   private toSuggestionEntity(record: ScheduledMealRecord): ScheduledMealSuggestionEntity {
+    const recipes =
+      record.isExpress === true
+        ? []
+        : this.scheduledMealRepository.toRecipeEntities(record.scheduledMealRecipes);
+
     return {
       id: record.id,
       plannedTime: formatPlannedTime(record.plannedTime),
       mealType: record.mealType,
-      recipes:
-        record.isExpress === true
-          ? []
-          : this.scheduledMealRepository.toRecipeEntities(record.scheduledMealRecipes),
+      recipes,
+      totalDurationMinutes: resolveRecipeLinksTotalDurationMinutes(recipes),
       isExpress: record.isExpress,
       expressNote: record.isExpress ? record.expressNote : null,
     };

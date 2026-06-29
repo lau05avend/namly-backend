@@ -16,6 +16,7 @@ export class ScheduledMealMapper {
     dto.plannedTime = entity.plannedTime;
     dto.isExpress = entity.isExpress;
     dto.status = entity.status;
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
 
     if (entity.isExpress) {
       dto.expressNote = entity.expressNote;

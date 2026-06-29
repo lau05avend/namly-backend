@@ -1,11 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { formatFloatingLocalEntryDate } from '@modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
-import { RecipesService } from '@modules/recipes/application/recipes.service';
-import {
-  attachDurationMinutesToRecipeLinks,
-  collectUniqueRecipeIds,
-} from '@modules/recipes/domain/utils/attach-duration-minutes-to-recipe-links.util';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import type { MealLogDetailEntity } from '../domain/entities/meal-log-detail.entity';
 import type { MealLogHistoryItemEntity } from '../domain/entities/meal-log-history-item.entity';
@@ -27,7 +22,6 @@ export class MealLogsService {
     private readonly mealLogRepository: MealLogRepository,
     private readonly createMealLogUseCase: CreateMealLogUseCase,
     private readonly updateMealLogUseCase: UpdateMealLogUseCase,
-    private readonly recipesService: RecipesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -51,39 +45,7 @@ export class MealLogsService {
       throw new NotFoundException('Meal log not found');
     }
 
-    return this.enrichMealLogDetailWithRecipeDurations(
-      toMealLogDetailEntity(record, this.mealLogRepository),
-    );
-  }
-
-  private async enrichMealLogDetailWithRecipeDurations(
-    entity: MealLogDetailEntity,
-  ): Promise<MealLogDetailEntity> {
-    const recipeIds = collectUniqueRecipeIds(
-      entity.recipes,
-      entity.scheduledMeal?.recipes ?? [],
-    );
-
-    if (recipeIds.length === 0) {
-      return entity;
-    }
-
-    const durationMinutesByRecipeId =
-      await this.recipesService.findTotalDurationMinutesByRecipeIds(recipeIds);
-
-    return {
-      ...entity,
-      recipes: attachDurationMinutesToRecipeLinks(entity.recipes, durationMinutesByRecipeId),
-      scheduledMeal: entity.scheduledMeal
-        ? {
-            ...entity.scheduledMeal,
-            recipes: attachDurationMinutesToRecipeLinks(
-              entity.scheduledMeal.recipes,
-              durationMinutesByRecipeId,
-            ),
-          }
-        : null,
-    };
+    return toMealLogDetailEntity(record, this.mealLogRepository);
   }
 
   async update(

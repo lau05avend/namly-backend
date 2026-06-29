@@ -2,6 +2,7 @@ import type { ScheduledMealEntity } from '../domain/entities/scheduled-meal.enti
 import type { ScheduledMealStatus } from '../domain/enums/scheduled-meal-status.enum';
 import type { ScheduledMealStatusInput } from '../domain/interfaces/scheduled-meal-status-input.interface';
 import { formatEntryDate, formatPlannedTime } from '../domain/utils/scheduled-meal-datetime.util';
+import { resolveRecipeLinksTotalDurationMinutes } from '@modules/recipes/domain/utils/resolve-recipe-links-total-duration-minutes.util';
 import {
   type ScheduledMealCompletionRecord,
   type ScheduledMealRepository,
@@ -26,6 +27,8 @@ export function toScheduledMealEntity(
   repository: ScheduledMealRepository,
   completionMealLogRecord?: ScheduledMealCompletionRecord | null,
 ): ScheduledMealEntity {
+  const recipes = record.isExpress ? [] : repository.toRecipeEntities(record.scheduledMealRecipes);
+
   return {
     id: record.id,
     mealTypeId: record.mealTypeId,
@@ -34,7 +37,8 @@ export function toScheduledMealEntity(
     plannedTime: formatPlannedTime(record.plannedTime),
     isExpress: record.isExpress,
     expressNote: record.isExpress ? record.expressNote : null,
-    recipes: record.isExpress ? [] : repository.toRecipeEntities(record.scheduledMealRecipes),
+    recipes,
+    totalDurationMinutes: resolveRecipeLinksTotalDurationMinutes(recipes),
     status,
     completionMealLog: mapCompletionMealLog(completionMealLogRecord),
   };

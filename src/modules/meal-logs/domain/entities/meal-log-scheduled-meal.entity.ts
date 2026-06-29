@@ -9,4 +9,5 @@ export interface MealLogScheduledMealEntity {
   readonly expressNote: string | null;
   readonly mealType: MealLogMealTypeEntity;
   readonly recipes: readonly MealLogRecipeEntity[];
+  readonly totalDurationMinutes: number | null;
 }

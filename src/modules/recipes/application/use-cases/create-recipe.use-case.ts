@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { computeStoredRecipeTotalDurationMinutes } from '../../domain/utils/resolve-recipe-total-duration-minutes.util';
 import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
 import type { CreateRecipeParams } from '../../domain/interfaces/create-recipe-params.interface';
 import { RecipeIngredientRepository } from '../../infrastructure/repositories/recipe-ingredient.repository';
@@ -31,6 +32,13 @@ export class CreateRecipeUseCase {
       await this.recipeIngredientRepository.createMany(tx, id, params.ingredients);
       await this.recipeStepRepository.createMany(tx, id, params.steps);
       await this.recipeTagLinkRepository.createMany(tx, id, params.tagIds);
+      await this.recipeRepository.updateTotalDurationMinutes(
+        tx,
+        id,
+        computeStoredRecipeTotalDurationMinutes(
+          params.steps.map((step) => step.durationMinutes),
+        ),
+      );
 
       return id;
     });

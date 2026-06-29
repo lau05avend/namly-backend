@@ -51,4 +51,7 @@ export class MealLogDetailDto {
   @ValidateNested({ each: true })
   @Type(() => MealLogTagDto)
   tags!: MealLogTagDto[];
+
+  @IsOptional()
+  totalDurationMinutes!: number | null;
 }

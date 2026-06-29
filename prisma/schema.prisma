@@ -276,6 +276,7 @@ model Recipe {
   updatedAt              DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz(6)
   isHomeRecommendation Boolean                   @default(false) @map("is_home_recommendation")
+  totalDurationMinutes Int?                      @map("total_duration_minutes")
   meal_log_recipes       meal_log_recipes[]
   folderItems            RecipeFolderItem[]
   ingredients            RecipeIngredient[]

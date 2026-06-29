@@ -12,6 +12,7 @@ export interface ScheduledMealEntity {
   readonly isExpress: boolean;
   readonly expressNote: string | null;
   readonly recipes: readonly ScheduledMealRecipeEntity[];
+  readonly totalDurationMinutes: number | null;
   readonly status: ScheduledMealStatus;
   readonly completionMealLog: ScheduledMealCompletionMealLogEntity | null;
 }

@@ -58,6 +58,7 @@ const recipeSelect = {
       select: {
         title: true,
         coverUrl: true,
+        totalDurationMinutes: true,
       },
     },
   },
@@ -79,7 +80,7 @@ export type ScheduledMealRecord = {
     id: string;
     recipeId: string;
     sortOrder: number;
-    recipe: { title: string; coverUrl: string | null };
+    recipe: { title: string; coverUrl: string | null; totalDurationMinutes: number | null };
   }>;
   mealLogs: Array<{ id: string }>;
 };
@@ -281,7 +282,7 @@ export class ScheduledMealRepository {
       recipeId: item.recipeId,
       title: item.recipe.title,
       coverUrl: item.recipe.coverUrl,
-      durationMinutes: null,
+      durationMinutes: item.recipe.totalDurationMinutes,
       sortOrder: item.sortOrder,
     }));
   }
