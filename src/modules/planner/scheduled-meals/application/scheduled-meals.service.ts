@@ -1,5 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RecipesService } from '@modules/recipes/application/recipes.service';
+import {
+  attachDurationMinutesToRecipeLinks,
+  collectUniqueRecipeIds,
+} from '@modules/recipes/domain/utils/attach-duration-minutes-to-recipe-links.util';
 import type { ScheduledMealEntity } from '../domain/entities/scheduled-meal.entity';
 import type { CreateScheduledMealParams } from '../domain/interfaces/create-scheduled-meal-params.interface';
 import type { UpdateScheduledMealParams } from '../domain/interfaces/update-scheduled-meal-params.interface';
@@ -32,6 +37,7 @@ export class ScheduledMealsService {
     private readonly plannerStatusService: PlannerStatusService,
     private readonly createScheduledMealUseCase: CreateScheduledMealUseCase,
     private readonly updateScheduledMealUseCase: UpdateScheduledMealUseCase,
+    private readonly recipesService: RecipesService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -66,12 +72,32 @@ export class ScheduledMealsService {
     const completionMealLogRecord =
       status === 'completed' ? (record.mealLogs[0] ?? null) : null;
 
-    return toScheduledMealEntity(
-      record,
-      status,
-      this.scheduledMealRepository,
-      completionMealLogRecord,
+    return this.enrichScheduledMealWithRecipeDurations(
+      toScheduledMealEntity(
+        record,
+        status,
+        this.scheduledMealRepository,
+        completionMealLogRecord,
+      ),
     );
+  }
+
+  private async enrichScheduledMealWithRecipeDurations(
+    entity: ScheduledMealEntity,
+  ): Promise<ScheduledMealEntity> {
+    if (entity.isExpress || entity.recipes.length === 0) {
+      return entity;
+    }
+
+    const durationMinutesByRecipeId =
+      await this.recipesService.findTotalDurationMinutesByRecipeIds(
+        collectUniqueRecipeIds(entity.recipes),
+      );
+
+    return {
+      ...entity,
+      recipes: attachDurationMinutesToRecipeLinks(entity.recipes, durationMinutesByRecipeId),
+    };
   }
 
   async getCalendarDays(profileId: string, month: string): Promise<readonly string[]> {

@@ -44,6 +44,12 @@ export class RecipesService {
     return recipe;
   }
 
+  findTotalDurationMinutesByRecipeIds(
+    recipeIds: readonly string[],
+  ): Promise<Map<string, number | null>> {
+    return this.recipeRepository.findTotalDurationMinutesByRecipeIds(recipeIds);
+  }
+
   createRecipe(profileId: string, params: CreateRecipeParams): Promise<RecipeDetailEntity> {
     return this.createRecipeUseCase.execute(profileId, params);
   }

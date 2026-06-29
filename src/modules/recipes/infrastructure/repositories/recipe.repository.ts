@@ -9,6 +9,11 @@ import type { RecipeListFilter } from '../../domain/enums/recipe-list-filter.enu
 import type { CreateRecipeCoreParams } from '../../domain/interfaces/create-recipe-core-params.interface';
 import type { UpdateRecipeCoreParams } from '../../domain/interfaces/update-recipe-core-params.interface';
 import { resolveRecipeMutationPermissions } from '../../domain/rules/resolve-recipe-mutation-permissions.util';
+import { resolveRecipeOrigin } from '../../domain/utils/resolve-recipe-origin.util';
+import {
+  resolveRecipeTotalDurationMinutes,
+  toRecipeListDurationMinutes,
+} from '../../domain/utils/resolve-recipe-total-duration-minutes.util';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -73,8 +78,17 @@ export class RecipeRepository {
       records.map((record) => record.id),
     );
 
+    const durationMinutesByRecipeId = await this.findTotalDurationMinutesByRecipeIds(
+      records.map((record) => record.id),
+    );
+
     return records.map((record) =>
-      this.toListItem(record, profileId, averageRatingsByRecipeId.get(record.id) ?? null),
+      this.toListItem(
+        record,
+        profileId,
+        averageRatingsByRecipeId.get(record.id) ?? null,
+        durationMinutesByRecipeId.get(record.id) ?? null,
+      ),
     );
   }
 
@@ -274,6 +288,12 @@ export class RecipeRepository {
       isPublic: true,
       createdAt: true,
       updatedAt: true,
+      profile: {
+        select: {
+          id: true,
+          displayName: true,
+        },
+      },
       ingredients: {
         orderBy: { name: 'asc' as const },
         select: {
@@ -342,6 +362,31 @@ export class RecipeRepository {
     return averageRatingsByRecipeId;
   }
 
+  async findTotalDurationMinutesByRecipeIds(
+    recipeIds: readonly string[],
+  ): Promise<Map<string, number | null>> {
+    if (recipeIds.length === 0) {
+      return new Map();
+    }
+
+    const aggregates = await this.prisma.recipeStep.groupBy({
+      by: ['recipeId'],
+      where: { recipeId: { in: [...recipeIds] } },
+      _sum: { durationMinutes: true },
+    });
+
+    const durationMinutesByRecipeId = new Map<string, number | null>();
+
+    for (const aggregate of aggregates) {
+      durationMinutesByRecipeId.set(
+        aggregate.recipeId,
+        toRecipeListDurationMinutes(aggregate._sum.durationMinutes ?? 0),
+      );
+    }
+
+    return durationMinutesByRecipeId;
+  }
+
   private toListItem(
     record: {
       id: string;
@@ -359,6 +404,7 @@ export class RecipeRepository {
     },
     viewerProfileId: string,
     averageRating: number | null,
+    durationMinutes: number | null,
   ): RecipeListItemEntity {
     const interaction = record.userRecipeInteractions[0];
 
@@ -366,6 +412,7 @@ export class RecipeRepository {
       id: record.id,
       title: record.title,
       coverUrl: record.coverUrl,
+      durationMinutes,
       rating: averageRating,
       isFavorite: interaction?.isFavorite ?? false,
       isHidden: interaction?.isHidden ?? false,
@@ -387,6 +434,10 @@ export class RecipeRepository {
       isPublic: boolean;
       createdAt: Date;
       updatedAt: Date;
+      profile: {
+        id: string;
+        displayName: string | null;
+      } | null;
       ingredients: Array<{
         id: string;
         name: string;
@@ -427,6 +478,9 @@ export class RecipeRepository {
   ): RecipeDetailEntity {
     const interactionRecord = record.userRecipeInteractions[0];
     const { canEdit, canDelete } = resolveRecipeMutationPermissions(record, viewerProfileId);
+    const durationMinutes = toRecipeListDurationMinutes(
+      resolveRecipeTotalDurationMinutes(record.steps.map((step) => step.durationMinutes)),
+    );
 
     return {
       recipe: {
@@ -434,10 +488,16 @@ export class RecipeRepository {
         title: record.title,
         description: record.description,
         coverUrl: record.coverUrl,
+        durationMinutes,
         isPublic: record.isPublic,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       },
+      origin: resolveRecipeOrigin({
+        profileId: record.profileId,
+        isSuggested: record.isSuggested,
+        profileDisplayName: record.profile?.displayName ?? null,
+      }),
       ingredients: record.ingredients.map((ingredient) => ({
         id: ingredient.id,
         name: ingredient.name,

@@ -6,6 +6,7 @@ import type { HomeRegisteredMealEntity } from '@modules/meal-logs/domain/entitie
 import type { HomeRecommendationEntity } from '@modules/recipes/domain/entities/home-recommendation.entity';
 import { getLocalEntryDateDayRange } from '@modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
 import { buildHomeRecommendationMeta } from '../../domain/utils/build-home-recommendation-meta.util';
+import { resolveRecipeTotalDurationMinutes } from '@modules/recipes/domain/utils/resolve-recipe-total-duration-minutes.util';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -109,9 +110,8 @@ export class HomeReadRepository {
       .map((link) => link.tag.name.trim())
       .filter((name) => name.length > 0);
 
-    const totalDurationMinutes: number = record.steps.reduce(
-      (total, step) => total + (step.durationMinutes ?? 0),
-      0,
+    const totalDurationMinutes = resolveRecipeTotalDurationMinutes(
+      record.steps.map((step) => step.durationMinutes),
     );
 
     return {

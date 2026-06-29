@@ -14,6 +14,9 @@ export class MealLogRecipeDto {
   @IsString()
   coverUrl!: string | null;
 
+  @IsOptional()
+  durationMinutes!: number | null;
+
   @IsInt()
   sortOrder!: number;
 }

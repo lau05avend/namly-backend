@@ -12,6 +12,9 @@ export class RecipeListItemDto {
   coverUrl!: string | null;
 
   @IsOptional()
+  durationMinutes!: number | null;
+
+  @IsOptional()
   rating!: number | null;
 
   @IsBoolean()

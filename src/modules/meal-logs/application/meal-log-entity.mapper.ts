@@ -45,6 +45,7 @@ export function toMealLogDetailEntity(
                   recipeId: item.recipeId,
                   title: item.recipe.title,
                   coverUrl: item.recipe.coverUrl,
+                  durationMinutes: null,
                   sortOrder: item.sortOrder,
                 })),
         }
@@ -54,6 +55,7 @@ export function toMealLogDetailEntity(
       recipeId: item.recipe_id,
       title: item.recipes.title,
       coverUrl: item.recipes.coverUrl,
+      durationMinutes: null,
       sortOrder: item.sort_order,
     })),
     tags: record.tagLinks.map((link) => link.tag),

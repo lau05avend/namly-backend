@@ -14,6 +14,9 @@ export class ScheduledMealRecipeDto {
   @IsString()
   coverUrl!: string | null;
 
+  @IsOptional()
+  durationMinutes!: number | null;
+
   @IsInt()
   @Min(1)
   sortOrder!: number;

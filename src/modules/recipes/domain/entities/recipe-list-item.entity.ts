@@ -2,6 +2,7 @@ export interface RecipeListItemEntity {
   readonly id: string;
   readonly title: string;
   readonly coverUrl: string | null;
+  readonly durationMinutes: number | null;
   readonly rating: number | null;
   readonly isFavorite: boolean;
   readonly isHidden: boolean;

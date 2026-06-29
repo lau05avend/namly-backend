@@ -281,6 +281,7 @@ export class ScheduledMealRepository {
       recipeId: item.recipeId,
       title: item.recipe.title,
       coverUrl: item.recipe.coverUrl,
+      durationMinutes: null,
       sortOrder: item.sortOrder,
     }));
   }

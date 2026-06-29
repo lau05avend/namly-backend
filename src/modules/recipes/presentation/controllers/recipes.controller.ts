@@ -40,7 +40,8 @@ export class RecipesController {
   @ApiOperation({
     summary: 'Listar recetas del usuario con filtros opcionales',
     description:
-      'Cada ítem incluye el rating promedio de todas las interacciones con valoración. ' +
+      'Cada ítem incluye el rating promedio de todas las interacciones con valoración y ' +
+      '`durationMinutes` como suma parcial de los tiempos configurados en los pasos (null si no hay tiempos). ' +
       'La valoración personal del usuario se obtiene en el detalle (`interaction.rating`).',
   })
   @ApiOkResponse({ type: RecipeListItemDto, isArray: true })
@@ -75,7 +76,12 @@ export class RecipesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener detalle de receta' })
+  @ApiOperation({
+    summary: 'Obtener detalle de receta',
+    description:
+      'Incluye `recipe.durationMinutes` (suma parcial de tiempos en pasos; null si no hay tiempos) ' +
+      'y `origin` con el perfil autor (`profileId`, `profileDisplayName`) o receta sugerida (`isSuggested: true`).',
+  })
   @ApiUuidParam('id', 'ID de la receta', SwaggerExamples.uuid.recipe)
   @ApiOkResponse({ type: RecipeDetailDto })
   @ApiStandardMutationResponses()

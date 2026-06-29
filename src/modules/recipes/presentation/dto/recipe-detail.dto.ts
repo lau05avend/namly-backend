@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import { IsArray, IsBoolean, ValidateNested } from 'class-validator';
 import { RecipeIngredientDto } from './recipe-ingredient.dto';
 import { RecipeInteractionDto } from './recipe-interaction.dto';
+import { RecipeOriginDto } from './recipe-origin.dto';
 import { RecipeStepDto } from './recipe-step.dto';
 import { RecipeSummaryDto } from './recipe-summary.dto';
 import { RecipeTagDto } from './recipe-tag.dto';
@@ -10,6 +11,10 @@ export class RecipeDetailDto {
   @ValidateNested()
   @Type(() => RecipeSummaryDto)
   recipe!: RecipeSummaryDto;
+
+  @ValidateNested()
+  @Type(() => RecipeOriginDto)
+  origin!: RecipeOriginDto;
 
   @IsArray()
   @ValidateNested({ each: true })

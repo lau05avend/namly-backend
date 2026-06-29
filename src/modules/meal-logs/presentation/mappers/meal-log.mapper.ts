@@ -77,6 +77,7 @@ export class MealLogMapper {
     dto.recipeId = entity.recipeId;
     dto.title = entity.title;
     dto.coverUrl = entity.coverUrl;
+    dto.durationMinutes = entity.durationMinutes;
     dto.sortOrder = entity.sortOrder;
 
     return dto;

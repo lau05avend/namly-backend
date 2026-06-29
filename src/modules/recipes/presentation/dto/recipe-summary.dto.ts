@@ -15,11 +15,11 @@ export class RecipeSummaryDto {
   @IsString()
   coverUrl!: string | null;
 
-  @IsBoolean()
-  isPublic!: boolean;
+  @IsOptional()
+  durationMinutes!: number | null;
 
   @IsBoolean()
-  isSuggested!: boolean;
+  isPublic!: boolean;
 
   @IsDate()
   createdAt!: Date;

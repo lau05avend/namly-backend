@@ -2,10 +2,12 @@ import { MeasurementUnitMapper } from '@modules/measurement-units/presentation/m
 import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
 import type { RecipeInteractionEntity } from '../../domain/entities/recipe-interaction.entity';
 import type { RecipeListItemEntity } from '../../domain/entities/recipe-list-item.entity';
+import type { RecipeOriginEntity } from '../../domain/entities/recipe-origin.entity';
 import { RecipeDetailDto } from '../dto/recipe-detail.dto';
 import { RecipeIngredientDto } from '../dto/recipe-ingredient.dto';
 import { RecipeInteractionDto } from '../dto/recipe-interaction.dto';
 import { RecipeListItemDto } from '../dto/recipe-list-item.dto';
+import { RecipeOriginDto } from '../dto/recipe-origin.dto';
 import { RecipeStepDto } from '../dto/recipe-step.dto';
 import { RecipeSummaryDto } from '../dto/recipe-summary.dto';
 import { RecipeTagDto } from '../dto/recipe-tag.dto';
@@ -16,6 +18,7 @@ export class RecipeMapper {
     dto.id = entity.id;
     dto.title = entity.title;
     dto.coverUrl = entity.coverUrl;
+    dto.durationMinutes = entity.durationMinutes;
     dto.rating = entity.rating;
     dto.isFavorite = entity.isFavorite;
     dto.isHidden = entity.isHidden;
@@ -33,6 +36,7 @@ export class RecipeMapper {
   static toDetailDto(entity: RecipeDetailEntity): RecipeDetailDto {
     const dto = new RecipeDetailDto();
     dto.recipe = this.toSummaryDto(entity.recipe);
+    dto.origin = this.toOriginDto(entity.origin);
     dto.ingredients = entity.ingredients.map((ingredient) => this.toIngredientDto(ingredient));
     dto.steps = entity.steps.map((step) => this.toStepDto(step));
     dto.tags = entity.tags.map((tag) => this.toTagDto(tag));
@@ -58,9 +62,18 @@ export class RecipeMapper {
     dto.title = entity.title;
     dto.description = entity.description;
     dto.coverUrl = entity.coverUrl;
+    dto.durationMinutes = entity.durationMinutes;
     dto.isPublic = entity.isPublic;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
+    return dto;
+  }
+
+  private static toOriginDto(entity: RecipeOriginEntity): RecipeOriginDto {
+    const dto = new RecipeOriginDto();
+    dto.profileId = entity.profileId;
+    dto.profileDisplayName = entity.profileDisplayName;
+    dto.isSuggested = entity.isSuggested;
     return dto;
   }
 
