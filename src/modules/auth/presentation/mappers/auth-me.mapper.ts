@@ -10,6 +10,8 @@ export class AuthMeMapper {
     dto.email = entity.email;
     dto.hasCompletedOnboarding = entity.hasCompletedOnboarding;
     dto.isNewUser = entity.isNewUser;
+    dto.isGuest = entity.isGuest;
+    dto.guestExpiresAt = entity.guestExpiresAt;
     return dto;
   }
 }

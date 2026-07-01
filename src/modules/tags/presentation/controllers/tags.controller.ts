@@ -21,6 +21,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '@common/decorators/public.decorator';
+import { RegisteredUsersOnly } from '@common/decorators/registered-users-only.decorator';
 import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
 import { ApiPublicOperation } from '@/docs/swagger/decorators/api-public-operation.decorator';
 import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
@@ -63,6 +64,7 @@ export class TagsController {
   }
 
   @Post()
+  @RegisteredUsersOnly()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Crear etiquetas del usuario' })
   @ApiCreatedResponse({ type: TagDto, isArray: true })
@@ -78,6 +80,7 @@ export class TagsController {
   }
 
   @Patch(':id')
+  @RegisteredUsersOnly()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Actualizar etiqueta del usuario' })
   @ApiParam({ name: 'id', format: 'uuid' })
@@ -94,6 +97,7 @@ export class TagsController {
   }
 
   @Delete(':id')
+  @RegisteredUsersOnly()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Eliminar etiqueta del usuario' })

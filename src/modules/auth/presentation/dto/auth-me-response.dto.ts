@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, IsUrl, IsUUID } from 'class-validator';
 
 export class AuthMeResponseDto {
@@ -21,4 +22,12 @@ export class AuthMeResponseDto {
 
   @IsBoolean()
   isNewUser!: boolean;
+
+  @IsBoolean()
+  isGuest!: boolean;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  guestExpiresAt!: string | null;
 }

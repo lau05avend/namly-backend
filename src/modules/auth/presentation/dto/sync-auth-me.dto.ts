@@ -12,4 +12,13 @@ export class SyncAuthMeDto {
   @IsString()
   @Trim()
   displayName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Identificador estable del dispositivo para guest_sessions',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  @IsOptional()
+  @IsString()
+  @Trim()
+  deviceId?: string;
 }

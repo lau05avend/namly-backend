@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '@common/constants/auth-metadata.constants';
 import { AuthService } from '@modules/auth/application/auth.service';
+import { GuestsService } from '@modules/guests/application/guests.service';
 import type { RequestContext } from '@shared/context/request-context.interface';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class SupabaseAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly authService: AuthService,
+    private readonly guestsService: GuestsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,6 +34,11 @@ export class SupabaseAuthGuard implements CanActivate {
 
     request.authUserId = authUser.id;
     request.authUser = authUser;
+    request.profileId = await this.authService.resolveProfileId(authUser.id);
+
+    const guestState = await this.guestsService.resolveGuestState(request.profileId);
+    request.isGuest = guestState.isGuest;
+    request.guestExpiresAt = guestState.guestExpiresAt;
 
     return true;
   }

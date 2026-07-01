@@ -32,6 +32,8 @@ export class RequestContextInterceptor implements NestInterceptor {
         isPublic: true,
         userId: null,
         user: null,
+        isGuest: false,
+        guestExpiresAt: null,
       };
     }
 
@@ -43,15 +45,19 @@ export class RequestContextInterceptor implements NestInterceptor {
         isPublic: false,
         userId: null,
         user: null,
+        isGuest: false,
+        guestExpiresAt: null,
       };
     }
 
-    const user = this.authService.toCurrentUser(authUser);
+    const user = this.authService.toCurrentUser(authUser, request.profileId ?? request.authUserId);
 
     return {
       isPublic: false,
-      userId: request.authUserId,
+      userId: request.profileId ?? request.authUserId,
       user,
+      isGuest: request.isGuest ?? false,
+      guestExpiresAt: request.guestExpiresAt ?? null,
     };
   }
 }

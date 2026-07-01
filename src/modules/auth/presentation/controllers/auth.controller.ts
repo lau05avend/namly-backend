@@ -32,6 +32,7 @@ export class AuthController {
   ): Promise<AuthMeResponseDto> {
     const result = await this.syncAuthMeUseCase.execute(authUser, {
       displayName: body.displayName,
+      deviceId: body.deviceId,
     });
 
     return AuthMeMapper.toDto(result);

@@ -5,4 +5,6 @@ export type AuthMeResultEntity = {
   email: string | null;
   hasCompletedOnboarding: boolean;
   isNewUser: boolean;
+  isGuest: boolean;
+  guestExpiresAt: string | null;
 };

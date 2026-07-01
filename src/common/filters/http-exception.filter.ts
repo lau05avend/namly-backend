@@ -22,6 +22,7 @@ interface ErrorResponseBody {
   timestamp: string;
   path: string;
   message: string | string[] | HttpExceptionResponse;
+  code?: string;
   details?: {
     code: string;
     meta: unknown;
@@ -61,6 +62,14 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
       path: request.url,
       message,
     };
+
+    if (
+      typeof exceptionResponse === 'object' &&
+      'code' in exceptionResponse &&
+      typeof exceptionResponse.code === 'string'
+    ) {
+      body.code = exceptionResponse.code;
+    }
 
     if (mappedPrisma && process.env.NODE_ENV === 'development') {
       body.details = {

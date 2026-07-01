@@ -2,10 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { User } from '@supabase/supabase-js';
 import { SupabaseService } from '@infrastructure/database/supabase/supabase.service';
 import type { CurrentUserInterface } from '@shared/context/current-user.interface';
+import { AuthIdentityRepository } from '../infrastructure/repositories/auth-identity.repository';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly authIdentityRepository: AuthIdentityRepository,
+  ) {}
 
   async validateAccessToken(accessToken: string): Promise<User> {
     const { data, error } = await this.supabaseService.getClient().auth.getUser(accessToken);
@@ -17,10 +21,16 @@ export class AuthService {
     return data.user;
   }
 
-  toCurrentUser(user: User): CurrentUserInterface {
+  async resolveProfileId(authUserId: string): Promise<string> {
+    const identity = await this.authIdentityRepository.findByAuthUserId(authUserId);
+
+    return identity?.profile.id ?? authUserId;
+  }
+
+  toCurrentUser(user: User, profileId: string): CurrentUserInterface {
     return {
       ...user,
-      profile_id: user.id,
+      profile_id: profileId,
     };
   }
 }

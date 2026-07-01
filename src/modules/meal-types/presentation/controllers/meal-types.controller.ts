@@ -22,6 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '@common/decorators/public.decorator';
+import { RegisteredUsersOnly } from '@common/decorators/registered-users-only.decorator';
 import { CurrentProfileId } from '@common/decorators/current-profile-id.decorator';
 import { ApiPublicOperation } from '@/docs/swagger/decorators/api-public-operation.decorator';
 import { ApiStandardMutationResponses } from '@/docs/swagger/decorators/api-standard-responses.decorator';
@@ -76,6 +77,7 @@ export class MealTypesController {
   }
 
   @Post()
+  @RegisteredUsersOnly()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Crear tipo de comida del usuario' })
   @ApiCreatedResponse({ type: MealTypeDto })
@@ -90,6 +92,7 @@ export class MealTypesController {
   }
 
   @Put('reorder')
+  @RegisteredUsersOnly()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({
     summary: 'Reordenar tipos de comida del usuario de forma masiva',
@@ -111,6 +114,7 @@ export class MealTypesController {
   }
 
   @Patch(':id')
+  @RegisteredUsersOnly()
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Actualizar tipo de comida del usuario' })
   @ApiParam({ name: 'id', format: 'uuid' })
@@ -127,6 +131,7 @@ export class MealTypesController {
   }
 
   @Delete(':id')
+  @RegisteredUsersOnly()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: 'Eliminar tipo de comida del usuario' })
