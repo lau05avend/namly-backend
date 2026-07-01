@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { RecipeAccessService } from '@modules/recipes/application/recipe-access.service';
+import { ScheduledMealRemindersService } from '@modules/planner/reminders/application/scheduled-meal-reminders.service';
 import type { ScheduledMealEntity } from '../../domain/entities/scheduled-meal.entity';
 import type { CreateScheduledMealParams } from '../../domain/interfaces/create-scheduled-meal-params.interface';
 import { parseEntryDate, parsePlannedTime } from '../../domain/utils/scheduled-meal-datetime.util';
@@ -26,6 +27,7 @@ export class CreateScheduledMealUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly plannerStatusService: PlannerStatusService,
+    private readonly scheduledMealRemindersService: ScheduledMealRemindersService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -39,6 +41,8 @@ export class CreateScheduledMealUseCase {
       await this.recipeAccessService.assertRecipesAccessible(profileId, params.recipeIds);
     }
 
+    this.scheduledMealRemindersService.assertValidReminders(params.reminders);
+
     const scheduledMealId = await this.prisma.$transaction(async (tx) => {
       const id = await this.scheduledMealRepository.createRecord(tx, profileId, {
         mealTypeId: params.mealTypeId,
@@ -51,6 +55,8 @@ export class CreateScheduledMealUseCase {
       if (!params.isExpress && params.recipeIds) {
         await this.scheduledMealRecipeRepository.createMany(tx, id, params.recipeIds);
       }
+
+      await this.scheduledMealRemindersService.syncForScheduledMeal(tx, id, params.reminders);
 
       return id;
     });

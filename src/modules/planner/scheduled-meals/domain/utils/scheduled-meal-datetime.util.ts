@@ -103,12 +103,16 @@ export function getFloatingLocalNowParts(now: Date = new Date()): {
   };
 }
 
+const displayTimeOptions: Intl.DateTimeFormatOptions = {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: true,
+};
+
 export function formatTimeToLocalString(loggedAt: Date): string {
   return loggedAt.toLocaleTimeString('es-CO', {
     timeZone: 'America/Bogota', // TODO: Ajusta a hora Colombia, recibir esto como parámetro
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
+    ...displayTimeOptions,
   });
 }
 

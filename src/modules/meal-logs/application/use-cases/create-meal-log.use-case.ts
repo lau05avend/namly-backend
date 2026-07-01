@@ -96,7 +96,12 @@ export class CreateMealLogUseCase {
 
     this.eventEmitter.emit(
       MEAL_LOG_CREATED_EVENT,
-      new MealLogCreatedEvent(profileId, mealLogId, record.loggedAt),
+      new MealLogCreatedEvent(
+        profileId,
+        mealLogId,
+        record.loggedAt,
+        params.scheduledMealId ?? null,
+      ),
     );
 
     return toMealLogDetailEntity(record, this.mealLogRepository);

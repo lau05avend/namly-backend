@@ -80,6 +80,7 @@ export const SwaggerRequestExamples = {
     plannedTime: SwaggerExamples.time.planned,
     isExpress: false,
     recipeIds: [SwaggerExamples.uuid.recipe],
+    reminders: [{ offsetMinutes: 30 }, { offsetMinutes: 0 }],
   },
   createScheduledMealExpress: {
     mealTypeId: SwaggerExamples.uuid.mealTypeMediaManana,
