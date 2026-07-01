@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { MealTypesService } from '@modules/meal-types/application/meal-types.service';
 import { RecipeAccessService } from '@modules/recipes/application/recipe-access.service';
+import { ScheduledMealRemindersService } from '@modules/planner/reminders/application/scheduled-meal-reminders.service';
 import type { ScheduledMealEntity } from '../../domain/entities/scheduled-meal.entity';
 import type { UpdateScheduledMealParams } from '../../domain/interfaces/update-scheduled-meal-params.interface';
 import {
@@ -29,6 +30,7 @@ export class UpdateScheduledMealUseCase {
     private readonly mealTypesService: MealTypesService,
     private readonly recipeAccessService: RecipeAccessService,
     private readonly plannerStatusService: PlannerStatusService,
+    private readonly scheduledMealRemindersService: ScheduledMealRemindersService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -66,6 +68,8 @@ export class UpdateScheduledMealUseCase {
       await this.recipeAccessService.assertRecipesAccessible(profileId, params.recipeIds);
     }
 
+    this.scheduledMealRemindersService.assertValidReminders(params.reminders);
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const core = await this.scheduledMealRepository.findCoreForProfileInTransaction(
         tx,
@@ -92,6 +96,12 @@ export class UpdateScheduledMealUseCase {
       } else if (params.recipeIds !== undefined) {
         await this.scheduledMealRecipeRepository.sync(tx, scheduledMealId, params.recipeIds);
       }
+
+      await this.scheduledMealRemindersService.syncForScheduledMeal(
+        tx,
+        scheduledMealId,
+        params.reminders,
+      );
 
       return true;
     });

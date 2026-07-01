@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-// import { ScheduleModule } from '@nestjs/schedule'; // Uncomment when using @nestjs/schedule
+import { ScheduleModule } from '@nestjs/schedule';
+import { RemindersModule } from '@modules/planner/reminders/reminders.module';
 import { ReminderScheduler } from './reminder.scheduler';
 
 @Module({
-  // imports: [ScheduleModule.forRoot()], // Uncomment when using @nestjs/schedule
+  imports: [ScheduleModule.forRoot(), RemindersModule],
   providers: [ReminderScheduler],
   exports: [ReminderScheduler],
 })

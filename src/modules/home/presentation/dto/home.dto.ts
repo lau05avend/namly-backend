@@ -45,6 +45,9 @@ export class HomeScheduledMealDto {
   @IsString()
   plannedTime!: string;
 
+  @IsString()
+  plannedTimeLabel!: string;
+
   @IsBoolean()
   isExpress!: boolean;
 
@@ -116,6 +119,14 @@ export class HomeRecommendationDto {
 
   @IsString()
   meta!: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  totalDurationMinutes!: number | null;
+
+  @IsOptional()
+  avgRating!: number | null;
 
   @IsString()
   imageUrl!: string;

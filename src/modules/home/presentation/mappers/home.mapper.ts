@@ -34,6 +34,7 @@ export class HomeMapper {
     dto.mealType = this.toMealTypeDto(entity.mealType);
     dto.entryDate = entity.entryDate;
     dto.plannedTime = entity.plannedTime;
+    dto.plannedTimeLabel = entity.plannedTimeLabel;
     dto.isExpress = entity.isExpress;
     dto.title = entity.title;
     dto.items = entity.items.map((item) => this.toScheduledMealItemDto(item));
@@ -91,6 +92,8 @@ export class HomeMapper {
     dto.id = entity.id;
     dto.title = entity.title;
     dto.meta = entity.meta;
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
+    dto.avgRating = entity.avgRating;
     dto.imageUrl = entity.imageUrl ?? '';
     return dto;
   }

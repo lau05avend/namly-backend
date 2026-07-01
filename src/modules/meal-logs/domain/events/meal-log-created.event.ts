@@ -5,5 +5,6 @@ export class MealLogCreatedEvent {
     public readonly profileId: string,
     public readonly mealLogId: string,
     public readonly loggedAt: Date,
+    public readonly scheduledMealId?: string | null,
   ) {}
 }

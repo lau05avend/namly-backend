@@ -1,3 +1,5 @@
+import type { ScheduledMealReminderEntity } from '@modules/planner/reminders/domain/entities/scheduled-meal-reminder.entity';
+import { resolveRecipeLinksTotalDurationMinutes } from '@modules/recipes/domain/utils/resolve-recipe-links-total-duration-minutes.util';
 import type { ScheduledMealEntity } from '../domain/entities/scheduled-meal.entity';
 import type { ScheduledMealStatus } from '../domain/enums/scheduled-meal-status.enum';
 import type { ScheduledMealStatusInput } from '../domain/interfaces/scheduled-meal-status-input.interface';
@@ -26,6 +28,8 @@ export function toScheduledMealEntity(
   repository: ScheduledMealRepository,
   completionMealLogRecord?: ScheduledMealCompletionRecord | null,
 ): ScheduledMealEntity {
+  const recipes = record.isExpress ? [] : repository.toRecipeEntities(record.scheduledMealRecipes);
+
   return {
     id: record.id,
     mealTypeId: record.mealTypeId,
@@ -34,10 +38,23 @@ export function toScheduledMealEntity(
     plannedTime: formatPlannedTime(record.plannedTime),
     isExpress: record.isExpress,
     expressNote: record.isExpress ? record.expressNote : null,
-    recipes: record.isExpress ? [] : repository.toRecipeEntities(record.scheduledMealRecipes),
+    recipes,
+    totalDurationMinutes: resolveRecipeLinksTotalDurationMinutes(recipes),
+    reminders: mapReminders(record.scheduledMealReminders),
     status,
     completionMealLog: mapCompletionMealLog(completionMealLogRecord),
   };
+}
+
+function mapReminders(
+  records: Array<{ id: string; offsetMinutes: number }>,
+): ScheduledMealReminderEntity[] {
+  return records
+    .map((record) => ({
+      id: record.id,
+      offsetMinutes: record.offsetMinutes,
+    }))
+    .sort((left, right) => right.offsetMinutes - left.offsetMinutes);
 }
 
 function mapCompletionMealLog(

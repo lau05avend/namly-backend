@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@/generated/prisma/client';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { scheduledMealReminderSelect } from '@modules/planner/reminders/infrastructure/repositories/scheduled-meal-reminder.repository';
 import type { ScheduledMealRecipeEntity } from '../../domain/entities/scheduled-meal-recipe.entity';
 import type { ScheduledMealMealTypeEntity } from '../../domain/entities/scheduled-meal-meal-type.entity';
 import type { CreateScheduledMealCoreParams } from '../../domain/interfaces/create-scheduled-meal-core-params.interface';
@@ -81,6 +82,7 @@ export type ScheduledMealRecord = {
     sortOrder: number;
     recipe: { title: string; coverUrl: string | null };
   }>;
+  scheduledMealReminders: Array<{ id: string; offsetMinutes: number }>;
   mealLogs: Array<{ id: string }>;
 };
 
@@ -281,6 +283,7 @@ export class ScheduledMealRepository {
       recipeId: item.recipeId,
       title: item.recipe.title,
       coverUrl: item.recipe.coverUrl,
+      durationMinutes: null,
       sortOrder: item.sortOrder,
     }));
   }
@@ -303,6 +306,7 @@ export class ScheduledMealRepository {
       expressNote: true,
       mealType: { select: mealTypeSelect },
       scheduledMealRecipes: recipeSelect,
+      scheduledMealReminders: scheduledMealReminderSelect,
       mealLogs: mealLogExistsSelect(profileId),
     };
   }
@@ -317,6 +321,7 @@ export class ScheduledMealRepository {
       expressNote: true,
       mealType: { select: mealTypeSelect },
       scheduledMealRecipes: recipeSelect,
+      scheduledMealReminders: scheduledMealReminderSelect,
       mealLogs: mealLogCompletionSelect(profileId),
     };
   }
@@ -330,6 +335,7 @@ export class ScheduledMealRepository {
     expressNote: string | null;
     mealType: ScheduledMealMealTypeEntity;
     scheduledMealRecipes: ScheduledMealRecord['scheduledMealRecipes'];
+    scheduledMealReminders: ScheduledMealRecord['scheduledMealReminders'];
     mealLogs: Array<{ id: string }>;
   }): ScheduledMealRecord {
     return {
@@ -341,6 +347,7 @@ export class ScheduledMealRepository {
       expressNote: record.expressNote,
       mealType: record.mealType,
       scheduledMealRecipes: record.scheduledMealRecipes,
+      scheduledMealReminders: record.scheduledMealReminders,
       mealLogs: record.mealLogs,
     };
   }
@@ -354,6 +361,7 @@ export class ScheduledMealRepository {
     expressNote: string | null;
     mealType: ScheduledMealMealTypeEntity;
     scheduledMealRecipes: ScheduledMealRecord['scheduledMealRecipes'];
+    scheduledMealReminders: ScheduledMealRecord['scheduledMealReminders'];
     mealLogs: ScheduledMealCompletionRecord[];
   }): ScheduledMealDetailRecord {
     return {
@@ -365,6 +373,7 @@ export class ScheduledMealRepository {
       expressNote: record.expressNote,
       mealType: record.mealType,
       scheduledMealRecipes: record.scheduledMealRecipes,
+      scheduledMealReminders: record.scheduledMealReminders,
       mealLogs: record.mealLogs,
     };
   }

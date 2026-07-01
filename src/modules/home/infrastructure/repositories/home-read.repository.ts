@@ -6,6 +6,7 @@ import type { HomeRegisteredMealEntity } from '@modules/meal-logs/domain/entitie
 import type { HomeRecommendationEntity } from '@modules/recipes/domain/entities/home-recommendation.entity';
 import { getLocalEntryDateDayRange } from '@modules/planner/scheduled-meals/domain/utils/scheduled-meal-datetime.util';
 import { buildHomeRecommendationMeta } from '../../domain/utils/build-home-recommendation-meta.util';
+import { HOME_RECOMMENDATION_MAX_TAGS } from '../../domain/constants/home.constants';
 
 const notDeleted = { deletedAt: null } as const;
 
@@ -21,6 +22,8 @@ const homeRecommendationSelect = {
   coverUrl: true,
   tagLinks: {
     where: { tag: { deletedAt: null } },
+    orderBy: { tag: { name: 'asc' } },
+    take: HOME_RECOMMENDATION_MAX_TAGS,
     select: {
       tag: {
         select: { name: true },
@@ -101,24 +104,60 @@ export class HomeReadRepository {
       return null;
     }
 
-    return this.toRecommendationEntity(record);
+    const avgRating = await this.resolveAverageRating(record.id);
+
+    return this.toRecommendationEntity(record, avgRating);
   }
 
-  private toRecommendationEntity(record: HomeRecommendationRecord): HomeRecommendationEntity {
+  private async resolveAverageRating(recipeId: string): Promise<number | null> {
+    const aggregate = await this.prisma.userRecipeInteraction.aggregate({
+      where: {
+        recipeId,
+        rating: { not: null },
+      },
+      _avg: { rating: true },
+    });
+
+    const averageRating = aggregate._avg.rating;
+
+    if (averageRating === null) {
+      return null;
+    }
+
+    return Math.round(averageRating * 10) / 10;
+  }
+
+  private toRecommendationEntity(
+    record: HomeRecommendationRecord,
+    avgRating: number | null,
+  ): HomeRecommendationEntity {
     const tagNames: string[] = record.tagLinks
       .map((link) => link.tag.name.trim())
       .filter((name) => name.length > 0);
 
-    const totalDurationMinutes: number = record.steps.reduce(
-      (total, step) => total + (step.durationMinutes ?? 0),
-      0,
-    );
-
     return {
       id: record.id,
       title: record.title,
-      meta: buildHomeRecommendationMeta(tagNames, totalDurationMinutes),
+      meta: buildHomeRecommendationMeta(tagNames),
+      totalDurationMinutes: resolveRecipeStepsTotalDurationMinutes(record.steps),
+      avgRating,
       imageUrl: record.coverUrl,
     };
   }
+}
+
+function resolveRecipeStepsTotalDurationMinutes(
+  steps: Array<{ durationMinutes: number | null }>,
+): number | null {
+  let total = 0;
+  let hasAnyDuration = false;
+
+  for (const step of steps) {
+    if (step.durationMinutes !== null && step.durationMinutes > 0) {
+      total += step.durationMinutes;
+      hasAnyDuration = true;
+    }
+  }
+
+  return hasAnyDuration ? total : null;
 }

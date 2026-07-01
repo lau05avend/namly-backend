@@ -14,6 +14,7 @@ export interface HomeScheduledMealEntity {
   readonly mealType: HomeMealTypeEntity;
   readonly entryDate: string;
   readonly plannedTime: string;
+  readonly plannedTimeLabel: string;
   readonly isExpress: boolean;
   readonly title: string;
   readonly items: readonly HomeScheduledMealItemEntity[];

@@ -4,6 +4,7 @@ import { ScheduledMealCompletionMealLogDto } from '../dto/scheduled-meal-complet
 import { ScheduledMealCompletionTagDto } from '../dto/scheduled-meal-completion-tag.dto';
 import { ScheduledMealMealTypeDto } from '../dto/scheduled-meal-meal-type.dto';
 import { ScheduledMealRecipeDto } from '../dto/scheduled-meal-recipe.dto';
+import { ScheduledMealReminderDto } from '../dto/scheduled-meal-reminder.dto';
 
 export class ScheduledMealMapper {
   static toDto(entity: ScheduledMealEntity): ScheduledMealDto {
@@ -16,6 +17,8 @@ export class ScheduledMealMapper {
     dto.plannedTime = entity.plannedTime;
     dto.isExpress = entity.isExpress;
     dto.status = entity.status;
+    dto.totalDurationMinutes = entity.totalDurationMinutes;
+    dto.reminders = entity.reminders.map((reminder) => this.toReminderDto(reminder));
 
     if (entity.isExpress) {
       dto.expressNote = entity.expressNote;
@@ -34,6 +37,17 @@ export class ScheduledMealMapper {
 
   static toDtoList(entities: readonly ScheduledMealEntity[]): ScheduledMealDto[] {
     return entities.map((entity) => this.toDto(entity));
+  }
+
+  private static toReminderDto(
+    entity: ScheduledMealEntity['reminders'][number],
+  ): ScheduledMealReminderDto {
+    const dto = new ScheduledMealReminderDto();
+
+    dto.id = entity.id;
+    dto.offsetMinutes = entity.offsetMinutes;
+
+    return dto;
   }
 
   private static toMealTypeDto(entity: ScheduledMealEntity): ScheduledMealMealTypeDto {

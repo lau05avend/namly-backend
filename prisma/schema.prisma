@@ -307,13 +307,14 @@ model ScheduledMealRecipe {
 model ScheduledMealReminder {
   id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   scheduledMealId String        @map("scheduled_meal_id") @db.Uuid
-  reminderTime    DateTime      @map("reminder_time") @db.Time(6)
+  offsetMinutes   Int           @map("offset_minutes")
   isNotified      Boolean       @default(false) @map("is_notified")
   isActive        Boolean       @default(true) @map("is_active")
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
   scheduledMeal   ScheduledMeal @relation(fields: [scheduledMealId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@unique([scheduledMealId, offsetMinutes])
   @@index([isActive, isNotified], map: "idx_reminders_active")
   @@map("scheduled_meal_reminders")
 }

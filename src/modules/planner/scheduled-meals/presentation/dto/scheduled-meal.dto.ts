@@ -13,6 +13,7 @@ import { SCHEDULED_MEAL_STATUSES } from '../../domain/enums/scheduled-meal-statu
 import { ScheduledMealCompletionMealLogDto } from './scheduled-meal-completion-meal-log.dto';
 import { ScheduledMealMealTypeDto } from './scheduled-meal-meal-type.dto';
 import { ScheduledMealRecipeDto } from './scheduled-meal-recipe.dto';
+import { ScheduledMealReminderDto } from './scheduled-meal-reminder.dto';
 
 export class ScheduledMealDto {
   @ApiProperty({ format: 'uuid' })
@@ -51,12 +52,26 @@ export class ScheduledMealDto {
   @Type(() => ScheduledMealRecipeDto)
   recipes?: ScheduledMealRecipeDto[];
 
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Suma de durationMinutes de recipes[]. null si express o sin tiempos.',
+    example: 45,
+  })
+  @IsOptional()
+  totalDurationMinutes!: number | null;
+
+  @ApiProperty({ type: [ScheduledMealReminderDto] })
+  @ValidateNested({ each: true })
+  @Type(() => ScheduledMealReminderDto)
+  reminders!: ScheduledMealReminderDto[];
+
   @ApiProperty({ enum: SCHEDULED_MEAL_STATUSES })
   @IsIn(SCHEDULED_MEAL_STATUSES)
   status!: (typeof SCHEDULED_MEAL_STATUSES)[number];
 
   @ApiPropertyOptional({
-    description: 'Registro de comida que completó la planificación. Solo en detalle cuando status es completed.',
+    description:
+      'Registro de comida que completó la planificación. Solo en detalle cuando status es completed.',
     type: ScheduledMealCompletionMealLogDto,
     nullable: true,
   })
