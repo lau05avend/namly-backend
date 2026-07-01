@@ -357,10 +357,22 @@ model Tag {
   mealLogLinks      MealLogTagLink[]
   onboardingOptions OnboardingOption[]
   recipeLinks       RecipeTagLink[]
+  keywords          TagKeyword[]
   profile           Profile?           @relation(fields: [profileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([profileId, deletedAt], map: "idx_tags_profile_deleted")
   @@map("tags")
+}
+
+model TagKeyword {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  keyword   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tagId, keyword], map: "idx_tag_keywords_tag_keyword")
+  @@map("tag_keywords")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

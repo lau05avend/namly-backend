@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsUUID, ValidateNested } from 'class-validator';
 import { RecipeIngredientDto } from './recipe-ingredient.dto';
+import { RecipeCompatibilityConflictDto } from './recipe-compatibility-conflict.dto';
 import { RecipeInteractionDto } from './recipe-interaction.dto';
 import { RecipeStepDto } from './recipe-step.dto';
 import { RecipeSummaryDto } from './recipe-summary.dto';
@@ -35,4 +36,16 @@ export class RecipeDetailDto {
 
   @IsBoolean()
   canDelete!: boolean;
+
+  @IsBoolean()
+  hasCompatibilityWarning!: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipeCompatibilityConflictDto)
+  compatibilityConflicts!: RecipeCompatibilityConflictDto[];
+
+  @IsArray()
+  @IsUUID('4', { each: true })
+  flaggedIngredientIds!: string[];
 }

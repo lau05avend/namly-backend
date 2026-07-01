@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@/generated/prisma/client';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import type { MeasurementUnitEntity } from '@modules/measurement-units/domain/entities/measurement-unit.entity';
-import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
+import type { RecipeDetailCoreEntity } from '../../domain/entities/recipe-detail.entity';
 import type { RecipeInteractionEntity } from '../../domain/entities/recipe-interaction.entity';
 import type { RecipeListItemEntity } from '../../domain/entities/recipe-list-item.entity';
 import type { RecipeListFilter } from '../../domain/enums/recipe-list-filter.enum';
@@ -78,7 +78,7 @@ export class RecipeRepository {
     );
   }
 
-  async findDetailById(recipeId: string, profileId: string): Promise<RecipeDetailEntity | null> {
+  async findDetailById(recipeId: string, profileId: string): Promise<RecipeDetailCoreEntity | null> {
     const record = await this.prisma.recipe.findFirst({
       where: {
         id: recipeId,
@@ -424,7 +424,7 @@ export class RecipeRepository {
       }>;
     },
     viewerProfileId: string,
-  ): RecipeDetailEntity {
+  ): RecipeDetailCoreEntity {
     const interactionRecord = record.userRecipeInteractions[0];
     const { canEdit, canDelete } = resolveRecipeMutationPermissions(record, viewerProfileId);
 

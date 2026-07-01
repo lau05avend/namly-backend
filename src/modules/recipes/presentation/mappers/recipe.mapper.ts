@@ -2,6 +2,7 @@ import { MeasurementUnitMapper } from '@modules/measurement-units/presentation/m
 import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
 import type { RecipeInteractionEntity } from '../../domain/entities/recipe-interaction.entity';
 import type { RecipeListItemEntity } from '../../domain/entities/recipe-list-item.entity';
+import { RecipeCompatibilityConflictDto } from '../dto/recipe-compatibility-conflict.dto';
 import { RecipeDetailDto } from '../dto/recipe-detail.dto';
 import { RecipeIngredientDto } from '../dto/recipe-ingredient.dto';
 import { RecipeInteractionDto } from '../dto/recipe-interaction.dto';
@@ -39,6 +40,22 @@ export class RecipeMapper {
     dto.interaction = this.toInteractionDto(entity.interaction);
     dto.canEdit = entity.canEdit;
     dto.canDelete = entity.canDelete;
+    dto.hasCompatibilityWarning = entity.compatibility.hasCompatibilityWarning;
+    dto.compatibilityConflicts = entity.compatibility.conflicts.map((conflict) =>
+      this.toCompatibilityConflictDto(conflict),
+    );
+    dto.flaggedIngredientIds = [...entity.compatibility.flaggedIngredientIds];
+    return dto;
+  }
+
+  private static toCompatibilityConflictDto(
+    entity: RecipeDetailEntity['compatibility']['conflicts'][number],
+  ): RecipeCompatibilityConflictDto {
+    const dto = new RecipeCompatibilityConflictDto();
+    dto.type = entity.type;
+    dto.label = entity.label;
+    dto.tagId = entity.tagId;
+    dto.matchedIngredients = [...entity.matchedIngredients];
     return dto;
   }
 

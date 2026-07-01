@@ -1,3 +1,4 @@
+import type { RecipeCompatibilityEntity } from './recipe-compatibility.entity';
 import type { RecipeInteractionEntity } from './recipe-interaction.entity';
 import type { RecipeIngredientEntity } from './recipe-ingredient.entity';
 import type { RecipeStepEntity } from './recipe-step.entity';
@@ -12,4 +13,7 @@ export interface RecipeDetailEntity {
   readonly interaction: RecipeInteractionEntity;
   readonly canEdit: boolean;
   readonly canDelete: boolean;
+  readonly compatibility: RecipeCompatibilityEntity;
 }
+
+export type RecipeDetailCoreEntity = Omit<RecipeDetailEntity, 'compatibility'>;

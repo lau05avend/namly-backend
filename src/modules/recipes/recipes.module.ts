@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { OnboardingModule } from '@modules/onboarding/onboarding.module';
+import { TagsModule } from '@modules/tags/tags.module';
 import { CreateRecipeUseCase } from './application/use-cases/create-recipe.use-case';
 import { UpdateRecipeUseCase } from './application/use-cases/update-recipe.use-case';
 import { RecipeAccessService } from './application/recipe-access.service';
+import { RecipeCompatibilityService } from './application/recipe-compatibility.service';
 import { RecipeFoldersService } from './application/recipe-folders.service';
 import { RecipeInteractionsService } from './application/recipe-interactions.service';
 import { RecipesService } from './application/recipes.service';
@@ -17,10 +20,12 @@ import { RecipeInteractionsController } from './presentation/controllers/recipe-
 import { RecipesController } from './presentation/controllers/recipes.controller';
 
 @Module({
+  imports: [OnboardingModule, TagsModule],
   controllers: [RecipesController, RecipeFoldersController, RecipeInteractionsController],
   providers: [
     RecipesService,
     RecipeAccessService,
+    RecipeCompatibilityService,
     RecipeFoldersService,
     RecipeInteractionsService,
     CreateRecipeUseCase,

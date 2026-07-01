@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
-import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
+import type { RecipeDetailCoreEntity } from '../../domain/entities/recipe-detail.entity';
 import type { UpdateRecipeParams } from '../../domain/interfaces/update-recipe-params.interface';
 import { RecipeIngredientRepository } from '../../infrastructure/repositories/recipe-ingredient.repository';
 import { RecipeRepository } from '../../infrastructure/repositories/recipe.repository';
@@ -21,7 +21,7 @@ export class UpdateRecipeUseCase {
     recipeId: string,
     profileId: string,
     params: UpdateRecipeParams,
-  ): Promise<RecipeDetailEntity | null> {
+  ): Promise<RecipeDetailCoreEntity | null> {
     const updated = await this.prisma.$transaction(async (tx) => {
       const owned = await this.recipeRepository.isOwnedInTransaction(tx, recipeId, profileId);
 

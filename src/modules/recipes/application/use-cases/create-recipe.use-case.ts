@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
-import type { RecipeDetailEntity } from '../../domain/entities/recipe-detail.entity';
+import type { RecipeDetailCoreEntity } from '../../domain/entities/recipe-detail.entity';
 import type { CreateRecipeParams } from '../../domain/interfaces/create-recipe-params.interface';
 import { RecipeIngredientRepository } from '../../infrastructure/repositories/recipe-ingredient.repository';
 import { RecipeRepository } from '../../infrastructure/repositories/recipe.repository';
@@ -19,7 +19,7 @@ export class CreateRecipeUseCase {
     private readonly recipeTagLinkRepository: RecipeTagLinkRepository,
   ) {}
 
-  async execute(profileId: string, params: CreateRecipeParams): Promise<RecipeDetailEntity> {
+  async execute(profileId: string, params: CreateRecipeParams): Promise<RecipeDetailCoreEntity> {
     const recipeId = await this.prisma.$transaction(async (tx) => {
       const id = await this.recipeRepository.createRecord(tx, profileId, {
         title: params.title,
