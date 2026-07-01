@@ -1,3 +1,68 @@
+/** Wall-clock timezone for planner entry dates and planned times (Colombia). */
+export const APP_FLOATING_TIMEZONE = 'America/Bogota';
+
+type ZonedDateParts = {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+  readonly hours: number;
+  readonly minutes: number;
+  readonly seconds: number;
+};
+
+function getZonedDateParts(
+  instant: Date,
+  timeZone: string = APP_FLOATING_TIMEZONE,
+): ZonedDateParts {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  });
+
+  const parts = formatter.formatToParts(instant);
+  const read = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((part) => part.type === type)?.value ?? '0');
+
+  return {
+    year: read('year'),
+    month: read('month'),
+    day: read('day'),
+    hours: read('hour'),
+    minutes: read('minute'),
+    seconds: read('second'),
+  };
+}
+
+function zonedWallClockToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hours: number,
+  minutes: number,
+  seconds: number,
+  timeZone: string = APP_FLOATING_TIMEZONE,
+): Date {
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+  const zoned = getZonedDateParts(utcGuess, timeZone);
+  const desiredAsUtc = Date.UTC(year, month - 1, day, hours, minutes, seconds);
+  const actualAsUtc = Date.UTC(
+    zoned.year,
+    zoned.month - 1,
+    zoned.day,
+    zoned.hours,
+    zoned.minutes,
+    zoned.seconds,
+  );
+
+  return new Date(utcGuess.getTime() + (desiredAsUtc - actualAsUtc));
+}
+
 export function parseEntryDate(dateStr: string): Date {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
 
@@ -71,7 +136,7 @@ export function toPlannedInstant(entryDate: Date, plannedTime: Date): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
   const [hours, minutes, seconds] = timeStr.split(':').map(Number);
 
-  return new Date(year, month - 1, day, hours, minutes, seconds, 0);
+  return zonedWallClockToUtc(year, month, day, hours, minutes, seconds);
 }
 
 export function formatFloatingLocalEntryDate(instant: Date): string {
@@ -79,9 +144,25 @@ export function formatFloatingLocalEntryDate(instant: Date): string {
 }
 
 export function getLocalEntryDateDayRange(entryDate: string): { start: Date; end: Date } {
-  const start = parseLocalEntryDate(entryDate);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(entryDate);
+
+  if (!match) {
+    throw new Error('Invalid entry date format');
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const start = zonedWallClockToUtc(year, month, day, 0, 0, 0);
+  const nextDay = new Date(Date.UTC(year, month - 1, day + 1));
+  const end = zonedWallClockToUtc(
+    nextDay.getUTCFullYear(),
+    nextDay.getUTCMonth() + 1,
+    nextDay.getUTCDate(),
+    0,
+    0,
+    0,
+  );
 
   return { start, end };
 }
@@ -90,15 +171,15 @@ export function getFloatingLocalNowParts(now: Date = new Date()): {
   entryDate: string;
   plannedTime: string;
 } {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const parts = getZonedDateParts(now);
+  const month = String(parts.month).padStart(2, '0');
+  const day = String(parts.day).padStart(2, '0');
+  const hours = String(parts.hours).padStart(2, '0');
+  const minutes = String(parts.minutes).padStart(2, '0');
+  const seconds = String(parts.seconds).padStart(2, '0');
 
   return {
-    entryDate: `${year}-${month}-${day}`,
+    entryDate: `${parts.year}-${month}-${day}`,
     plannedTime: `${hours}:${minutes}:${seconds}`,
   };
 }
@@ -111,7 +192,7 @@ const displayTimeOptions: Intl.DateTimeFormatOptions = {
 
 export function formatTimeToLocalString(loggedAt: Date): string {
   return loggedAt.toLocaleTimeString('es-CO', {
-    timeZone: 'America/Bogota', // TODO: Ajusta a hora Colombia, recibir esto como parámetro
+    timeZone: APP_FLOATING_TIMEZONE,
     ...displayTimeOptions,
   });
 }
